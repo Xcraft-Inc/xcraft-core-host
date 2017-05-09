@@ -9,8 +9,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "xcraft-server": "^2.0.0",
-    "xcraft-core-log": "^1.0.0"
+    "watt": "^3.3.0",
+    "xcraft-core-log": "^1.0.0",
+    "xcraft-server": "^2.0.0"
   },
   "devDependencies": {
     "xcraft-dev-rules": "^0.1.3"
