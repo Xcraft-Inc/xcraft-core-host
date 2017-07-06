@@ -11,7 +11,7 @@
   "dependencies": {
     "watt": "^3.3.0",
     "xcraft-core-log": "^1.0.0",
-    "xcraft-server": "^2.0.0"
+    "xcraft-server": "^3.0.0"
   },
   "devDependencies": {
     "xcraft-dev-rules": "^0.1.3"
