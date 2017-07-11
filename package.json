@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Multiple engines support for xcraft-server",
   "main": "lib/index.js",
+  "bin": {
+    "xcraft-host": "./bin/host"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
