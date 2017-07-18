@@ -18,7 +18,7 @@ class Host {
       this._appConfigPath = config.appConfigPath;
 
       xLog.info (
-        `electron runtime detected, config path: ${config.appConfigPath}, project path: ${config.projectPath}`
+        `electron runtime detected, config: ${JSON.stringify (config, null, 2)}`
       );
 
       this._xServer = require ('xcraft-server') (
