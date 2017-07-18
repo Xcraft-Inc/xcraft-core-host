@@ -15,6 +15,11 @@ class Host {
 
     if (this._isElectron) {
       const config = require ('../lib/index.js');
+
+      if (config.appEnv === 'release' && !process.env.NODE_ENV) {
+        process.env.NODE_ENV = 'production';
+      }
+
       this._appConfigPath = config.appConfigPath;
 
       xLog.info (
