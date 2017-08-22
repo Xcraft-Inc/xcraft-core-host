@@ -13,29 +13,27 @@ class Host {
     this._isElectron = !!process.versions.electron;
     this._appConfigPath = {};
 
+    const config = require ('../lib/index.js');
+
+    if (config.appEnv === 'release' && !process.env.NODE_ENV) {
+      process.env.NODE_ENV = 'production';
+    }
+
+    this._appConfigPath = config.appConfigPath;
+
+    this._xServer = require ('xcraft-server') (
+      config.appConfigPath,
+      config.projectPath
+    );
+
     if (this._isElectron) {
-      const config = require ('../lib/index.js');
-
-      if (config.appEnv === 'release' && !process.env.NODE_ENV) {
-        process.env.NODE_ENV = 'production';
-      }
-
-      this._appConfigPath = config.appConfigPath;
-
-      xLog.info (
-        `electron runtime detected, config: ${JSON.stringify (config, null, 2)}`
-      );
-
-      this._xServer = require ('xcraft-server') (
-        config.appConfigPath,
-        config.projectPath
-      );
-
+      xLog.info (`electron runtime detected,`);
       app.on ('window-all-closed', () => {}); /* Prevent the app exiting */
     } else {
-      // FIXME
-      this._xServer = require ('xcraft-server') ();
+      xLog.info (`node runtime detected`);
     }
+
+    xLog.info (`config; ${JSON.stringify (config, null, 2)}`);
 
     const etcRoot = path.join (this._appConfigPath, 'etc');
     this._xConfig = require ('xcraft-core-etc') (etcRoot).load (moduleName);
