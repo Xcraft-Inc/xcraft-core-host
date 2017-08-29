@@ -10,6 +10,10 @@ const xLog = require ('xcraft-core-log') (moduleName);
 
 class Host {
   constructor () {
+    if (!process.env.XCRAFT_LOG && process.env.NODE_ENV === 'production') {
+      process.env.XCRAFT_LOG = '2';
+    }
+
     this._isElectron = !!process.versions.electron;
     this._appConfigPath = {};
 
