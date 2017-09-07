@@ -21,8 +21,6 @@ class Host {
     }
 
     this._isElectron = !!process.versions.electron;
-    this._appConfigPath = {};
-
     this._appConfigPath = config.appConfigPath;
 
     this._xServer = require ('xcraft-server') (
