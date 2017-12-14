@@ -85,4 +85,6 @@ class Host {
 }
 
 const host = new Host ();
-host.boot ().catch (xLog.err);
+host.boot ().catch (err => {
+  xLog.err (err);
+});
