@@ -30,6 +30,9 @@ class Host {
 
     if (this._isElectron) {
       xLog.info (`electron runtime detected,`);
+
+      process.on ('uncaughtException', xLog.warn.bind (xLog));
+
       app.on ('window-all-closed', () => {}); /* Prevent the app exiting */
     } else {
       xLog.info (`node runtime detected`);
