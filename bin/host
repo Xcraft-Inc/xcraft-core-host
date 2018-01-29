@@ -54,8 +54,6 @@ class Host {
   }
 
   *_startAndRunMainQuest (next) {
-    yield this._xServer.start (next);
-
     /* HACK: force and unusual orc name.
      * The problem is that the greathall::* topic is already registered, then
      * when this BusClient is used to send commands, an other orc name must
@@ -83,19 +81,25 @@ class Host {
       app.once ('ready', next.parallel ().arg (0));
     }
 
-    const {BusClient} = require ('xcraft-core-busclient');
-    this._busClient = new BusClient ();
+    yield this._xServer.start (next);
 
-    this._startAndRunMainQuest (next.parallel ());
-    yield next.sync ();
+    if (this._xConfig.mainQuest) {
+      const {BusClient} = require ('xcraft-core-busclient');
+      this._busClient = new BusClient ();
 
-    /* Start the secondary quest (electron ready) */
-    yield this._busClient.command.send (
-      this._xConfig.secondaryQuest,
-      null,
-      null,
-      next
-    );
+      this._startAndRunMainQuest (next.parallel ());
+      yield next.sync ();
+
+      if (this._xConfig.secondaryQuest) {
+        /* Start the secondary quest (electron ready) */
+        yield this._busClient.command.send (
+          this._xConfig.secondaryQuest,
+          null,
+          null,
+          next
+        );
+      }
+    }
   }
 }
 

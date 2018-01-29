@@ -8,12 +8,12 @@ module.exports = [
     type: 'input',
     name: 'mainQuest',
     message: 'main quest to start',
-    default: 'defaultapp.boot',
+    default: null,
   },
   {
     type: 'input',
     name: 'secondaryQuest',
     message: 'secondary quest to start (electron ready)',
-    default: 'defaultapp.start',
+    default: null,
   },
 ];
