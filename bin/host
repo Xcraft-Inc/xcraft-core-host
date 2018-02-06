@@ -5,7 +5,6 @@ const moduleName = 'xcraft-core-host';
 
 const {app} = require ('electron');
 const watt = require ('watt');
-const path = require ('path');
 const xLog = require ('xcraft-core-log') (moduleName);
 
 class Host {
@@ -41,8 +40,7 @@ class Host {
 
     xLog.info (`config; ${JSON.stringify (config, null, 2)}`);
 
-    const etcRoot = path.join (this._appConfigPath, 'etc');
-    this._xConfig = require ('xcraft-core-etc') (etcRoot).load (moduleName);
+    this._xConfig = require ('xcraft-core-etc') ().load (moduleName);
 
     watt.wrapAll (this);
   }
