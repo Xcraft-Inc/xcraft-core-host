@@ -27,11 +27,10 @@ class Host {
       config.projectPath
     );
 
+    process.on ('uncaughtException', xLog.warn.bind (xLog));
+
     if (this._isElectron) {
       xLog.info (`electron runtime detected,`);
-
-      process.on ('uncaughtException', xLog.warn.bind (xLog));
-
       // FIXME: it should be defined by application instead that globally
       app.on ('window-all-closed', this._onAllClosed.bind (this));
     } else {
