@@ -64,6 +64,13 @@ class Host {
       next
     );
 
+    const _next = next.parallel ();
+    const unsub = this._busClient.events.subscribe ('greathall::loaded', () => {
+      unsub ();
+      _next ();
+    });
+    yield next.sync ();
+
     /* Start the main quest (app bootstrap). */
     yield this._busClient.command.send (
       this._xConfig.mainQuest,
