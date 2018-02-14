@@ -56,7 +56,8 @@ class Host {
      * when this BusClient is used to send commands, an other orc name must
      * be used in order to handle properly all subscribes of events.
      */
-    this._busClient._orcName = 'host';
+    const xBus = require ('xcraft-core-bus');
+    this._busClient._orcName = xBus.generateOrcName ();
 
     yield this._busClient.connect (
       'ee',
