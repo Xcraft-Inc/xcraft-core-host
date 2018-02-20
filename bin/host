@@ -3,13 +3,13 @@
 
 const moduleName = 'xcraft-core-host';
 
-const {app} = require ('electron');
-const watt = require ('watt');
-const xLog = require ('xcraft-core-log') (moduleName);
+const {app} = require('electron');
+const watt = require('watt');
+const xLog = require('xcraft-core-log')(moduleName);
 
 class Host {
-  constructor () {
-    const config = require ('../lib/index.js');
+  constructor() {
+    const config = require('../lib/index.js');
 
     if (config.appEnv === 'release' && !process.env.NODE_ENV) {
       process.env.NODE_ENV = 'production';
@@ -22,58 +22,60 @@ class Host {
     this._isElectron = !!process.versions.electron;
     this._appConfigPath = config.appConfigPath;
 
-    this._xServer = require ('xcraft-server') (
+    this._xServer = require('xcraft-server')(
       config.appConfigPath,
       config.projectPath
     );
 
-    process.on ('uncaughtException', xLog.warn.bind (xLog));
+    process.on('uncaughtException', xLog.warn.bind(xLog));
 
     if (this._isElectron) {
-      xLog.info (`electron runtime detected,`);
+      xLog.info(`electron runtime detected,`);
       // FIXME: it should be defined by application instead that globally
-      app.on ('window-all-closed', this._onAllClosed.bind (this));
+      app.on('window-all-closed', this._onAllClosed.bind(this));
     } else {
-      xLog.info (`node runtime detected`);
+      xLog.info(`node runtime detected`);
     }
 
-    xLog.info (`config; ${JSON.stringify (config, null, 2)}`);
+    xLog.info(`config; ${JSON.stringify(config, null, 2)}`);
 
-    this._xConfig = require ('xcraft-core-etc') ().load (moduleName);
+    this._xConfig = require('xcraft-core-etc')().load(moduleName);
 
-    watt.wrapAll (this);
+    watt.wrapAll(this);
   }
 
-  _onAllClosed () {
+  _onAllClosed() {
     if (this._busClient) {
-      this._busClient.command.send ('shutdown');
+      this._busClient.command.send('shutdown');
     }
   }
 
-  *_startAndRunMainQuest (next) {
+  *_startAndRunMainQuest(next) {
     /* HACK: force and unusual orc name.
      * The problem is that the greathall::* topic is already registered, then
      * when this BusClient is used to send commands, an other orc name must
      * be used in order to handle properly all subscribes of events.
      */
-    const xBus = require ('xcraft-core-bus');
-    this._busClient._orcName = xBus.generateOrcName ();
+    const xBus = require('xcraft-core-bus');
+    this._busClient._orcName = xBus.generateOrcName();
 
-    yield this._busClient.connect (
+    yield this._busClient.connect(
       'ee',
-      require ('xcraft-core-busclient').getGlobal ().getToken (),
+      require('xcraft-core-busclient')
+        .getGlobal()
+        .getToken(),
       next
     );
 
-    const _next = next.parallel ();
-    const unsub = this._busClient.events.subscribe ('greathall::loaded', () => {
-      unsub ();
-      _next ();
+    const _next = next.parallel();
+    const unsub = this._busClient.events.subscribe('greathall::loaded', () => {
+      unsub();
+      _next();
     });
-    yield next.sync ();
+    yield next.sync();
 
     /* Start the main quest (app bootstrap). */
-    yield this._busClient.command.send (
+    yield this._busClient.command.send(
       this._xConfig.mainQuest,
       null,
       null,
@@ -81,23 +83,23 @@ class Host {
     );
   }
 
-  *boot (next) {
+  *boot(next) {
     if (this._isElectron) {
-      app.once ('ready', next.parallel ().arg (0));
+      app.once('ready', next.parallel().arg(0));
     }
 
-    yield this._xServer.start (next);
+    yield this._xServer.start(next);
 
     if (this._xConfig.mainQuest) {
-      const {BusClient} = require ('xcraft-core-busclient');
-      this._busClient = new BusClient ();
+      const {BusClient} = require('xcraft-core-busclient');
+      this._busClient = new BusClient();
 
-      this._startAndRunMainQuest (next.parallel ());
-      yield next.sync ();
+      this._startAndRunMainQuest(next.parallel());
+      yield next.sync();
 
       if (this._xConfig.secondaryQuest) {
         /* Start the secondary quest (electron ready) */
-        yield this._busClient.command.send (
+        yield this._busClient.command.send(
           this._xConfig.secondaryQuest,
           null,
           null,
@@ -108,7 +110,7 @@ class Host {
   }
 }
 
-const host = new Host ();
-host.boot ().catch (err => {
-  xLog.err (err);
+const host = new Host();
+host.boot().catch(err => {
+  xLog.err(err);
 });
