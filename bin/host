@@ -27,7 +27,9 @@ class Host {
       config.projectPath
     );
 
-    process.on('uncaughtException', xLog.warn.bind(xLog));
+    process.on('uncaughtException', ex => {
+      xLog.warn(ex.stack || ex);
+    });
 
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
