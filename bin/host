@@ -61,19 +61,18 @@ class Host {
     const xBus = require('xcraft-core-bus');
     this._busClient._orcName = xBus.generateOrcName();
 
-    yield this._busClient.connect(
-      'ee',
-      require('xcraft-core-busclient')
-        .getGlobal()
-        .getToken(),
-      next
-    );
-
     const _next = next.parallel();
-    const unsub = this._busClient.events.subscribe('greathall::loaded', () => {
+    const unsub = this._busClient.events.subscribe(`greathall::loaded`, () => {
       unsub();
       _next();
     });
+
+    const isLoaded = yield this._busClient.connect('ee', null, next);
+    if (isLoaded) {
+      unsub();
+      _next();
+    }
+
     yield next.sync();
 
     /* Start the main quest (app bootstrap). */
