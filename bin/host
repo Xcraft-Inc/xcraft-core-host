@@ -33,8 +33,7 @@ class Host {
 
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
-      // FIXME: it should be defined by application instead that globally
-      app.on('window-all-closed', this._onAllClosed.bind(this));
+      app.on('window-all-closed', () => null);
     } else {
       xLog.info(`node runtime detected`);
     }
@@ -46,7 +45,7 @@ class Host {
     watt.wrapAll(this);
   }
 
-  _onAllClosed() {
+  _terminate() {
     if (this._busClient) {
       this._busClient.command.send('shutdown');
     }
@@ -108,6 +107,8 @@ class Host {
           null,
           next
         );
+        // FIXME: not 100% accurate...
+        this._terminate();
       }
     }
   }
