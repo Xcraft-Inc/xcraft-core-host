@@ -3,7 +3,6 @@
 
 const moduleName = 'xcraft-core-host';
 
-const {app} = require('electron');
 const watt = require('watt');
 const xLog = require('xcraft-core-log')(moduleName);
 
@@ -20,6 +19,7 @@ class Host {
     }
 
     this._isElectron = !!process.versions.electron;
+    this._app = null;
     this._appConfigPath = config.appConfigPath;
 
     this._xServer = require('xcraft-server')(
@@ -33,7 +33,8 @@ class Host {
 
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
-      app.on('window-all-closed', () => null);
+      this._app = require('electron').app;
+      this._app.on('window-all-closed', () => null);
     } else {
       xLog.info(`node runtime detected`);
     }
@@ -86,8 +87,8 @@ class Host {
   }
 
   *boot(next) {
-    if (this._isElectron) {
-      app.once('ready', next.parallel().arg(0));
+    if (this._app) {
+      this._app.once('ready', next.parallel().arg(0));
     }
 
     yield this._xServer.start(next);
