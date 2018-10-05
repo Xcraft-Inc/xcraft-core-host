@@ -28,7 +28,9 @@ class Host {
     );
 
     process.on('uncaughtException', ex => {
-      xLog.warn(ex.stack || ex);
+      xLog.err(
+        `Please, ensure to yield properly all async calls: ${ex.stack || ex}`
+      );
     });
 
     if (this._isElectron) {
