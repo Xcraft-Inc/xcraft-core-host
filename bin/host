@@ -29,7 +29,9 @@ class Host {
 
     process.on('uncaughtException', ex => {
       xLog.err(
-        `Please, ensure to yield properly all async calls: ${ex.stack || ex}`
+        `Please, ensure to yield properly all async calls: ${ex.stack ||
+          ex.message ||
+          ex}`
       );
     });
 
