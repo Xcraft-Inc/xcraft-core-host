@@ -12,7 +12,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "gigawatts": "^4.0.0",
+    "gigawatts": "^4.0.1",
     "xcraft-core-bus": "^2.0.2",
     "xcraft-core-log": "^1.0.0",
     "xcraft-core-utils": "^1.1.0",
