@@ -3,7 +3,7 @@
 
 const moduleName = 'xcraft-core-host';
 
-const watt = require('watt');
+const watt = require('gigawatts');
 const xLog = require('xcraft-core-log')(moduleName);
 
 class Host {
