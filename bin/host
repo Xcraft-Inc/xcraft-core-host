@@ -79,7 +79,7 @@ class Host {
 
     yield next.sync();
 
-    yield this._busClient.command.send('goblin.start', null, null, next);
+    yield this._busClient.command.send('goblin.init', null, null, next);
 
     /* Start the main quest (app bootstrap). */
     yield this._busClient.command.send(
