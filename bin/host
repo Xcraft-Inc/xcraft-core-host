@@ -71,11 +71,7 @@ class Host {
       _next();
     });
 
-    const isLoaded = yield this._busClient.connect(
-      'ee',
-      null,
-      next
-    );
+    const isLoaded = yield this._busClient.connect('ee', null, next);
     if (isLoaded) {
       unsub();
       _next();
