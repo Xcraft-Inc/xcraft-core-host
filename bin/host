@@ -39,6 +39,15 @@ class Host {
       xLog.info(`electron runtime detected,`);
       this._app = require('electron').app;
       this._app.on('window-all-closed', () => null);
+      // Specific for macOS
+      this._app.on('open-file', (ev, filePath) => {
+        if (this._busClient && this._busClient.isConnected()) {
+          this._notifyOpenFile(filePath);
+        } else {
+          this.filePath = filePath;
+        }
+        ev.preventDefault();
+      });
     } else {
       xLog.info(`node runtime detected`);
     }
@@ -54,6 +63,20 @@ class Host {
     if (this._busClient) {
       this._busClient.command.send('shutdown');
     }
+  }
+
+  _notifyOpenFile(filePath) {
+    if (!this._xConfig.openFileQuest) {
+      return;
+    }
+    this._busClient.command.send(
+      this._xConfig.openFileQuest,
+      {filePaths: [filePath]},
+      null,
+      err => {
+        console.error(err);
+      }
+    );
   }
 
   *_startAndRunMainQuest(next) {
@@ -103,6 +126,11 @@ class Host {
 
       this._startAndRunMainQuest(next.parallel());
       yield next.sync();
+
+      if (this.filePath) {
+        this._notifyOpenFile(this.filePath);
+        this.filePath = null;
+      }
 
       if (this._xConfig.secondaryQuest) {
         /* Start the secondary quest (electron ready) */

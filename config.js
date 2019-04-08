@@ -16,4 +16,10 @@ module.exports = [
     message: 'secondary quest to start (electron ready)',
     default: null,
   },
+  {
+    type: 'input',
+    name: 'openFileQuest',
+    message: 'quest called when a file is opened',
+    default: null,
+  },
 ];
