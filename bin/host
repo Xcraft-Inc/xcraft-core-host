@@ -73,9 +73,7 @@ class Host {
       this._xConfig.openFileQuest,
       {filePaths: [filePath]},
       null,
-      err => {
-        console.error(err);
-      }
+      err => xLog.err(err)
     );
   }
 
