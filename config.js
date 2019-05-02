@@ -23,7 +23,7 @@ module.exports = [
     default: null,
   },
   {
-    type: 'input',
+    type: 'confirm',
     name: 'singleInstance',
     message: 'boolean to makes your application a Single Instance Application',
     default: false,
