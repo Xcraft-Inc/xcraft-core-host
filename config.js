@@ -22,4 +22,16 @@ module.exports = [
     message: 'quest called when a file is opened',
     default: null,
   },
+  {
+    type: 'input',
+    name: 'singleInstance',
+    message: 'boolean to makes your application a Single Instance Application',
+    default: false,
+  },
+  {
+    type: 'input',
+    name: 'newInstanceQuest',
+    message: 'quest called when a new Instance is launch',
+    default: null,
+  },
 ];

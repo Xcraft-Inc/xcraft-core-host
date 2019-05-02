@@ -35,9 +35,28 @@ class Host {
       );
     });
 
+    this._xConfig = require('xcraft-core-etc')().load(moduleName);
+
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
       this._app = require('electron').app;
+
+      if (this._xConfig.singleInstance) {
+        const gotTheLock = this._app.requestSingleInstanceLock();
+        if (!gotTheLock) {
+          this._app.quit();
+        } else {
+          this._app.on(
+            'second-instance',
+            (event, commandLine, workingDirectory) => {
+              if (this._busClient && this._busClient.isConnected()) {
+                this._notifyNewInstance(commandLine, workingDirectory);
+              }
+            }
+          );
+        }
+      }
+
       this._app.on('window-all-closed', () => null);
       // Specific for macOS
       this._app.on('open-file', (ev, filePath) => {
@@ -53,8 +72,6 @@ class Host {
     }
 
     xLog.info(`config; ${JSON.stringify(config, null, 2)}`);
-
-    this._xConfig = require('xcraft-core-etc')().load(moduleName);
 
     watt.wrapAll(this);
   }
@@ -72,6 +89,18 @@ class Host {
     this._busClient.command.send(
       this._xConfig.openFileQuest,
       {filePaths: [filePath]},
+      null,
+      err => xLog.err(err)
+    );
+  }
+
+  _notifyNewInstance(commandLine, workingDirectory) {
+    if (!this._xConfig.newInstanceQuest) {
+      return;
+    }
+    this._busClient.command.send(
+      this._xConfig.newInstanceQuest,
+      {commandLine, workingDirectory},
       null,
       err => xLog.err(err)
     );
