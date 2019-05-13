@@ -13,7 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "gigawatts": "^4.0.1",
-    "xcraft-core-bus": "^2.0.2",
+    "xcraft-core-bus": "^3.0.0",
     "xcraft-core-log": "^1.0.0",
     "xcraft-core-utils": "^2.0.0",
     "xcraft-server": "^4.0.0"
