@@ -15,7 +15,7 @@
     "gigawatts": "^4.0.1",
     "xcraft-core-bus": "^2.0.2",
     "xcraft-core-log": "^1.0.0",
-    "xcraft-core-utils": "^1.1.0",
+    "xcraft-core-utils": "^2.0.0",
     "xcraft-server": "^4.0.0"
   },
   "devDependencies": {
