@@ -18,7 +18,16 @@ class Host {
       process.env.XCRAFT_LOG = '2';
     }
 
-    this._isElectron = !!process.versions.electron;
+    let electron;
+    try {
+      electron = require('electron');
+    } catch (ex) {
+      if (ex.code !== 'MODULE_NOT_FOUND') {
+        throw ex;
+      }
+    }
+    this._isElectron =
+      !!process.versions.electron && electron && typeof electron !== 'string';
     this._app = null;
     this._appConfigPath = config.appConfigPath;
 
