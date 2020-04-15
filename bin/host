@@ -36,11 +36,11 @@ class Host {
       config.projectPath
     );
 
-    process.on('uncaughtException', ex => {
+    process.on('uncaughtException', (ex) => {
       xLog.err(
-        `Please, ensure to yield properly all async calls: ${ex.stack ||
-          ex.message ||
-          ex}`
+        `Please, ensure to yield properly all async calls: ${
+          ex.stack || ex.message || ex
+        }`
       );
     });
 
@@ -99,7 +99,7 @@ class Host {
       this._xConfig.openFileQuest,
       {filePaths: [filePath]},
       null,
-      err => xLog.err(err)
+      (err) => xLog.err(err)
     );
   }
 
@@ -111,7 +111,7 @@ class Host {
       this._xConfig.newInstanceQuest,
       {commandLine, workingDirectory},
       null,
-      err => xLog.err(err)
+      (err) => xLog.err(err)
     );
   }
 
@@ -184,6 +184,6 @@ class Host {
 }
 
 const host = new Host();
-host.boot().catch(err => {
+host.boot().catch((err) => {
   xLog.err(err);
 });
