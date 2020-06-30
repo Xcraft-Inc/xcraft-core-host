@@ -14,7 +14,7 @@ class Host {
       process.env.NODE_ENV = 'production';
     }
 
-    if (!process.env.XCRAFT_LOG && process.env.NODE_ENV === 'production') {
+    if (!process.env.XCRAFT_LOG && process.env.NODE_ENV !== 'development') {
       process.env.XCRAFT_LOG = '2';
     }
 
