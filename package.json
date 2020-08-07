@@ -13,10 +13,10 @@
   "license": "MIT",
   "dependencies": {
     "gigawatts": "^4.0.1",
-    "xcraft-core-bus": "^3.0.0",
-    "xcraft-core-log": "^1.0.0",
-    "xcraft-core-utils": "^2.0.0",
-    "xcraft-server": "^4.0.0"
+    "xcraft-core-bus": "^4.0.0",
+    "xcraft-core-log": "^1.3.0",
+    "xcraft-core-utils": "^3.0.0",
+    "xcraft-server": "^4.0.3"
   },
   "devDependencies": {
     "prettier": "2.0.4",
