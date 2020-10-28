@@ -149,6 +149,14 @@ class Host {
     );
   }
 
+  *_bootstrapHorde() {
+    const xHorde = require('xcraft-core-horde');
+    if (xHorde.config.autoload) {
+      const resp = this._busClient.newResponse(moduleName, 'token');
+      yield xHorde.autoload(resp);
+    }
+  }
+
   *boot(next) {
     if (this._app) {
       this._app.once('ready', next.parallel().arg(0));
@@ -156,10 +164,15 @@ class Host {
 
     yield this._xServer.start(next);
 
-    if (this._xConfig.mainQuest) {
-      const {BusClient} = require('xcraft-core-busclient');
-      this._busClient = new BusClient();
+    const {BusClient} = require('xcraft-core-busclient');
+    this._busClient = new BusClient();
 
+    const xBus = require('xcraft-core-bus');
+    if (xBus._commander.isModuleRegistered('horde')) {
+      yield this._bootstrapHorde();
+    }
+
+    if (this._xConfig.mainQuest) {
       this._startAndRunMainQuest(next.parallel());
       yield next.sync();
 
