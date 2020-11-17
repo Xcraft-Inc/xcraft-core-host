@@ -155,6 +155,8 @@ class Host {
   }
 
   *_startAndRunMainQuest(next) {
+    yield setTimeout(next, 5000); // XXX: very ugly hack to prevent races at boot
+
     /* Start the main quest (app bootstrap). */
     yield this._busClient.command.send(
       this._xConfig.mainQuest,
