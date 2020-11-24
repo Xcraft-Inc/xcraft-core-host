@@ -59,7 +59,10 @@ class Host {
             'second-instance',
             (event, commandLine, workingDirectory) => {
               if (this._busClient && this._busClient.isConnected()) {
-                this._notifyNewInstance(commandLine, workingDirectory);
+                this._notifyNewInstance(
+                  this._parseCliArguments(commandLine),
+                  workingDirectory
+                );
               }
             }
           );
@@ -83,6 +86,43 @@ class Host {
     xLog.info(`config; ${JSON.stringify(config, null, 2)}`);
 
     watt.wrapAll(this);
+  }
+
+  _parseCliArguments() {
+    let args = process.argv;
+
+    const electronArgs = [
+      '--allow-file-access-from-files',
+      '--original-process-start-time',
+      '--no-sandbox',
+      '--inspect',
+      '--inspect-brk',
+      '--remote-debugging-port',
+    ];
+
+    // Remove args destinated to Electron
+    args = args.filter(
+      (arg) => !electronArgs.some((electronArg) => arg.startsWith(electronArg))
+    );
+
+    // hide electron path and current bin
+    const {hideBin} = require('yargs/helpers');
+    args = require('yargs/yargs')(hideBin(args)).parse();
+
+    // named args are stored by their name and unamed args into "_" key.
+    // For example: node ./cli -l=fr_CH test_potato
+    // args = {
+    //   "_": [
+    //     "test_potato",
+    //   ],
+    //   "l": "fr_CH",
+    // };
+
+    // TODO: Add configuration in app.json for CLI commands/arguments by app or special case like shell
+
+    console.log('parsed args:', args);
+
+    return args;
   }
 
   _terminate() {
@@ -141,9 +181,11 @@ class Host {
     yield this._busClient.command.send('goblin.init', null, null, next);
 
     /* Start the main quest (app bootstrap). */
+
+    const cliArgs = this._parseCliArguments();
     yield this._busClient.command.send(
       this._xConfig.mainQuest,
-      null,
+      {cliArgs},
       null,
       next
     );

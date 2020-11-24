@@ -12,6 +12,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "yargs": "^16.1.1",
     "gigawatts": "^4.0.1",
     "xcraft-core-bus": "^4.0.0",
     "xcraft-core-log": "^1.3.0",
