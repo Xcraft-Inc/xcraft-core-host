@@ -37,7 +37,7 @@ module.exports = [
   {
     type: 'input',
     name: 'appOptions',
-    message: 'Allow you to hide/show debugger logs',
+    message: 'add custom command line options (yargs format)',
     default: null,
   },
 ];
