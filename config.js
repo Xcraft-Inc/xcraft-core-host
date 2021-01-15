@@ -34,4 +34,10 @@ module.exports = [
     message: 'quest called when a new Instance is launch',
     default: null,
   },
+  {
+    type: 'input',
+    name: 'appOptions',
+    message: 'Allow you to hide/show debugger logs',
+    default: null,
+  },
 ];
