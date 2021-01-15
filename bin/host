@@ -33,7 +33,8 @@ class Host {
 
     this._xServer = require('xcraft-server')(
       config.appConfigPath,
-      config.projectPath
+      config.projectPath,
+      () => require('../lib/args-parsing.js')()
     );
 
     process.on('uncaughtException', (ex) => {
@@ -43,8 +44,6 @@ class Host {
         }`
       );
     });
-
-    require('../lib/args-parsing.js')();
 
     this._xConfig = require('xcraft-core-etc')().load(moduleName);
 
