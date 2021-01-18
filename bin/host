@@ -194,8 +194,7 @@ class Host {
     yield this._init(xBus);
 
     if (this._xConfig.mainQuest) {
-      this._startAndRunMainQuest(next.parallel());
-      yield next.sync();
+      yield this._startAndRunMainQuest();
 
       if (this.filePath) {
         this._notifyOpenFile(this.filePath);
