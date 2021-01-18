@@ -59,7 +59,10 @@ class Host {
           this._app.on(
             'second-instance',
             (event, commandLine, workingDirectory) => {
-              commandLine = require('../lib/args-parsing.js')(true);
+              commandLine = require('../lib/args-parsing.js')(
+                true,
+                commandLine
+              );
               if (this._busClient && this._busClient.isConnected()) {
                 this._notifyNewInstance(commandLine, workingDirectory);
               }
