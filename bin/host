@@ -195,6 +195,7 @@ class Host {
 
     if (this._xConfig.mainQuest) {
       yield this._startAndRunMainQuest();
+      xBus.acceptIncoming();
 
       if (this.filePath) {
         this._notifyOpenFile(this.filePath);
@@ -212,6 +213,8 @@ class Host {
         // FIXME: not 100% accurate...
         this._terminate();
       }
+    } else {
+      xBus.acceptIncoming();
     }
   }
 }
