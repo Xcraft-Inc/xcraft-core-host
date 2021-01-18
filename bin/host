@@ -120,13 +120,12 @@ class Host {
     );
   }
 
-  *_init(next) {
+  *_init(xBus, next) {
     /* HACK: force and unusual orc name.
      * The problem is that the greathall::* topic is already registered, then
      * when this BusClient is used to send commands, an other orc name must
      * be used in order to handle properly all subscribes of events.
      */
-    const xBus = require('xcraft-core-bus');
     this._busClient._orcName = xBus.generateOrcName();
     let connected = false;
 
@@ -192,7 +191,7 @@ class Host {
       yield this._bootstrapHorde();
     }
 
-    yield this._init();
+    yield this._init(xBus);
 
     if (this._xConfig.mainQuest) {
       this._startAndRunMainQuest(next.parallel());
