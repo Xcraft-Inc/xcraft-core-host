@@ -190,10 +190,15 @@ class Host {
     yield this._init(xBus);
 
     if (this._xConfig.mainQuest) {
-      yield this._startAndRunMainQuest();
+      this._startAndRunMainQuest(next.parallel());
       if (this._app) {
-        yield this._app.whenReady();
+        const _next = next.parallel();
+        this._app
+          .whenReady()
+          .then(() => _next())
+          .catch(_next);
       }
+      yield next.sync();
 
       xBus.acceptIncoming();
 
