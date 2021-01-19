@@ -179,10 +179,6 @@ class Host {
   *boot(next) {
     yield this._xServer.start(next);
 
-    if (this._app) {
-      this._app.once('ready', next.parallel().arg(0));
-    }
-
     const {BusClient} = require('xcraft-core-busclient');
     this._busClient = new BusClient();
 
@@ -194,8 +190,10 @@ class Host {
     yield this._init(xBus);
 
     if (this._xConfig.mainQuest) {
-      this._startAndRunMainQuest(next.parallel());
-      yield next.sync(); // wait for ready too
+      yield this._startAndRunMainQuest();
+      if (this._app) {
+        yield this._app.whenReady();
+      }
 
       xBus.acceptIncoming();
 
