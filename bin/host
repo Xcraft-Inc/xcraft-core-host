@@ -190,6 +190,8 @@ class Host {
     yield this._init(xBus);
 
     if (this._xConfig.mainQuest) {
+      let alert;
+
       this._startAndRunMainQuest(next.parallel());
       if (this._app) {
         const _next = next.parallel();
@@ -197,6 +199,26 @@ class Host {
           .whenReady()
           .then(() => _next())
           .catch(_next);
+
+        const appArgs = require('../lib/args-parsing.js')();
+        if (appArgs['relaunch-reason']) {
+          const {app} = require('electron');
+          let message = `${app.getName()} is restarting, please wait...`;
+          if (appArgs) {
+            switch (appArgs['relaunch-reason']) {
+              case 'client-connection':
+                message = `${app.getName()} is restarting after a server restart, please wait...`;
+                break;
+              case 'server-restart':
+                message = `${app.getName()} is restarting after a connection lose, please wait...`;
+                break;
+            }
+          }
+
+          const MsgBox = require('../lib/msgbox.js');
+          alert = new MsgBox();
+          alert.open(message);
+        }
       }
       yield next.sync();
 
@@ -205,6 +227,10 @@ class Host {
       if (this.filePath) {
         this._notifyOpenFile(this.filePath);
         this.filePath = null;
+      }
+
+      if (alert) {
+        alert.close();
       }
 
       if (this._xConfig.secondaryQuest) {
