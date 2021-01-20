@@ -201,7 +201,8 @@ class Host {
           .catch(_next);
 
         const appArgs = require('../lib/args-parsing.js')();
-        if (appArgs['relaunch-reason']) {
+
+        if (this._isElectron && appArgs['relaunch-reason']) {
           const {app} = require('electron');
           let message = `${app.getName()} is restarting, please wait...`;
           if (appArgs) {
