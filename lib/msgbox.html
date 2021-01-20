@@ -1,75 +1,78 @@
 <html>
-  <style>
-    @keyframes wave {
-      0% {
-        transform: scale(2, 2) translateX(25%) rotate(0deg);
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @keyframes wave {
+        0% {
+          transform: scale(2, 2) translateX(25%) rotate(0deg);
+        }
+        20% {
+          transform: scale(3, 2) translateX(13%) rotate(-4deg);
+        }
+        30% {
+          transform: scale(2.5, 2) translateX(6%) rotate(1deg);
+        }
+        50% {
+          transform: scale(2, 2) translateX(-3%) rotate(-5deg);
+        }
+        60% {
+          transform: scale(3, 2) translateX(-16%) rotate(-7deg);
+        }
+        70% {
+          transform: scale(3.5, 2) translateX(-16%) rotate(5deg);
+        }
+        85% {
+          transform: scale(2.5, 2) translateX(-22%) rotate(-3deg);
+        }
+        100% {
+          transform: scale(2, 2) translateX(-25%) rotate(0deg);
+        }
       }
-      20% {
-        transform: scale(3, 2) translateX(13%) rotate(-4deg);
-      }
-      30% {
-        transform: scale(2.5, 2) translateX(6%) rotate(1deg);
-      }
-      50% {
-        transform: scale(2, 2) translateX(-3%) rotate(-5deg);
-      }
-      60% {
-        transform: scale(3, 2) translateX(-16%) rotate(-7deg);
-      }
-      70% {
-        transform: scale(3.5, 2) translateX(-16%) rotate(5deg);
-      }
-      85% {
-        transform: scale(2.5, 2) translateX(-22%) rotate(-3deg);
-      }
-      100% {
-        transform: scale(2, 2) translateX(-25%) rotate(0deg);
-      }
-    }
 
-    body {
-      margin: 0;
-      padding: 0;
-      display: table;
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
-      font: message-box;
-      pointer-events: none;
-      overflow: hidden;
-      background: linear-gradient(175deg, #052036be, #05203600 70%);
-      box-shadow: inset 0px 0px 0px 2px #00000049;
-    }
+      body {
+        margin: 0;
+        padding: 0;
+        display: table;
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        font: message-box;
+        pointer-events: none;
+        overflow: hidden;
+        background: linear-gradient(175deg, #052036be, #05203600 70%);
+        box-shadow: inset 0px 0px 0px 2px #00000049;
+      }
 
-    #waves {
-      position: absolute;
-      left: 0px;
-      right: 0px;
-      top: calc(50% - 30px);
-      fill: rgba(0, 0, 0, 0.1);
-      will-change: transform;
-      transform-origin: top;
-      animation: 30s ease-in-out infinite normal;
-      animation-direction: alternate;
-      animation-name: wave;
-    }
+      #waves {
+        position: absolute;
+        left: 0px;
+        right: 0px;
+        top: calc(50% - 30px);
+        fill: rgba(0, 0, 0, 0.1);
+        will-change: transform;
+        transform-origin: top;
+        animation: 30s ease-in-out infinite normal;
+        animation-direction: alternate;
+        animation-name: wave;
+      }
 
-    #message {
-      padding: 20px;
-      color: #d6e0ea;
-      text-align: center;
-      font-weight: 500;
-      display: table-cell;
-      vertical-align: middle;
-      line-height: 1.5;
-    }
+      #message {
+        padding: 20px;
+        color: #d6e0ea;
+        text-align: center;
+        font-weight: 500;
+        display: table-cell;
+        vertical-align: middle;
+        line-height: 1.5;
+      }
 
-    #message::first-letter {
-      text-transform: capitalize;
-    }
-  </style>
+      #message::first-letter {
+        text-transform: capitalize;
+      }
+    </style>
+  </head>
   <body>
     <div id="waves">
       <svg viewBox="0 -10 297 210">
