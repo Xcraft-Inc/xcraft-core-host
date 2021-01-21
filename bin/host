@@ -231,7 +231,7 @@ class Host {
       }
 
       if (alert) {
-        setTimeout(() => alert.close(), 2000);
+        setTimeout(() => alert.close(), 4000);
       }
 
       if (this._xConfig.secondaryQuest) {
