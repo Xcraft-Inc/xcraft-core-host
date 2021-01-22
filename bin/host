@@ -144,7 +144,7 @@ class Host {
      * when this BusClient is used to send commands, an other orc name must
      * be used in order to handle properly all subscribes of events.
      */
-    this._busClient._orcName = 'greathall@' + xBus.getToken();
+    this._busClient._orcName = xBus.generateOrcName();
     let connected = false;
 
     const _next = next.parallel();
