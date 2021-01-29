@@ -226,10 +226,10 @@ class Host {
           if (appArgs) {
             switch (appArgs['relaunch-reason']) {
               case 'client-connection':
-                message = `${app.getName()} is restarting after a server restart, please wait...`;
+                message = `${app.getName()} is restarting after a connection lose, please wait...`;
                 break;
               case 'server-restart':
-                message = `${app.getName()} is restarting after a connection lose, please wait...`;
+                message = `${app.getName()} is restarting after a server restart, please wait...`;
                 break;
             }
           }
