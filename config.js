@@ -17,6 +17,12 @@ module.exports = [
     default: null,
   },
   {
+    type: 'list',
+    name: 'afterLoadQuests',
+    message: 'quest(s) to call after host load',
+    default: [],
+  },
+  {
     type: 'input',
     name: 'openFileQuest',
     message: 'quest called when a file is opened',

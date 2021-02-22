@@ -241,6 +241,14 @@ class Host {
       }
       yield next.sync();
 
+      if (this._xConfig.afterLoadQuests) {
+        for (const quest of this._xConfig.afterLoadQuests) {
+          yield this._busClient.command.send(quest, null, null, next, {
+            forceNested: true,
+          });
+        }
+      }
+
       xBus.acceptIncoming();
 
       if (this.filePath) {
