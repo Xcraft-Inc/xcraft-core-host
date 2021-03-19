@@ -68,7 +68,10 @@ class Host {
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
       this._app = require('electron').app;
-
+      this._app.once('ready', () => {
+        //pre-load window-manager
+        require('../lib/wm.js');
+      });
       if (this._xConfig.singleInstance) {
         const gotTheLock = this._app.requestSingleInstanceLock();
         if (!gotTheLock) {
