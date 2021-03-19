@@ -1,13 +1,28 @@
 #!/usr/bin/env node
 'use strict';
 require('v8-compile-cache');
+let electron;
+try {
+  electron = require('electron');
+} catch (ex) {
+  if (ex.code !== 'MODULE_NOT_FOUND') {
+    throw ex;
+  }
+}
+const isElectron =
+  !!process.versions.electron && electron && typeof electron !== 'string';
+if (isElectron) {
+  electron.app.once('ready', () => {
+    //pre-load window-manager
+    require('../lib/wm.js');
+  });
+}
 const moduleName = 'xcraft-core-host';
-
 const watt = require('gigawatts');
 const xLog = require('xcraft-core-log')(moduleName);
 
 class Host {
-  constructor() {
+  constructor(isElectron) {
     /* Prepare WESTEROS_APP environment variable */
     const appArg = process.argv.reduce((res, arg, it, arr) => {
       if (/^--app=/.test(arg)) {
@@ -35,17 +50,7 @@ class Host {
     if (!process.env.XCRAFT_LOG && process.env.NODE_ENV !== 'development') {
       process.env.XCRAFT_LOG = '2';
     }
-
-    let electron;
-    try {
-      electron = require('electron');
-    } catch (ex) {
-      if (ex.code !== 'MODULE_NOT_FOUND') {
-        throw ex;
-      }
-    }
-    this._isElectron =
-      !!process.versions.electron && electron && typeof electron !== 'string';
+    this._isElectron = isElectron;
     this._app = null;
     this._appConfigPath = config.appConfigPath;
 
@@ -68,10 +73,6 @@ class Host {
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
       this._app = require('electron').app;
-      this._app.once('ready', () => {
-        //pre-load window-manager
-        require('../lib/wm.js');
-      });
       if (this._xConfig.singleInstance) {
         const gotTheLock = this._app.requestSingleInstanceLock();
         if (!gotTheLock) {
@@ -280,7 +281,7 @@ class Host {
   }
 }
 
-const host = new Host();
+const host = new Host(isElectron);
 host.boot().catch((err) => {
   xLog.err(err);
 });
