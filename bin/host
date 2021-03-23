@@ -190,6 +190,20 @@ class Host {
     );
   }
 
+  *_startAndRunSecondaryQuest(next) {
+    if (this._xConfig.secondaryQuest) {
+      /* Start the secondary quest (electron ready) */
+      yield this._busClient.command.send(
+        this._xConfig.secondaryQuest,
+        null,
+        null,
+        next
+      );
+      // FIXME: not 100% accurate...
+      this._terminate();
+    }
+  }
+
   *_bootstrapHorde() {
     const xHorde = require('xcraft-core-horde');
     if (xHorde.config.autoload) {
@@ -219,7 +233,12 @@ class Host {
         const _next = next.parallel();
         this._app
           .whenReady()
-          .then(() => _next())
+          .then(() => {
+            this._startAndRunSecondaryQuest().catch((err) => {
+              xLog.err(err);
+            });
+            _next();
+          })
           .catch(_next);
 
         const appArgs = require('../lib/args-parsing.js')();
@@ -262,18 +281,6 @@ class Host {
 
       if (alert) {
         setTimeout(() => alert.close(), 4000);
-      }
-
-      if (this._xConfig.secondaryQuest) {
-        /* Start the secondary quest (electron ready) */
-        yield this._busClient.command.send(
-          this._xConfig.secondaryQuest,
-          null,
-          null,
-          next
-        );
-        // FIXME: not 100% accurate...
-        this._terminate();
       }
     } else {
       xBus.acceptIncoming();
