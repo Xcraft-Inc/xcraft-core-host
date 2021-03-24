@@ -11,12 +11,6 @@ try {
 }
 const isElectron =
   !!process.versions.electron && electron && typeof electron !== 'string';
-if (isElectron) {
-  electron.app.once('ready', () => {
-    //pre-load window-manager
-    require('../lib/wm.js');
-  });
-}
 const moduleName = 'xcraft-core-host';
 const watt = require('gigawatts');
 const xLog = require('xcraft-core-log')(moduleName);
@@ -203,6 +197,13 @@ class Host {
 
     const {BusClient} = require('xcraft-core-busclient');
     this._busClient = new BusClient();
+
+    if (this._isElectron) {
+      electron.app.once('ready', () => {
+        //pre-load window-manager
+        require('../lib/wm.js');
+      });
+    }
 
     const xBus = require('xcraft-core-bus');
     if (xBus._commander.isModuleRegistered('horde')) {
