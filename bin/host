@@ -11,6 +11,13 @@ try {
 }
 const isElectron =
   !!process.versions.electron && electron && typeof electron !== 'string';
+
+if (this._isElectron) {
+  electron.app.once('ready', () => {
+    //pre-load window-manager
+    require('../lib/wm.js');
+  });
+}
 const moduleName = 'xcraft-core-host';
 const watt = require('gigawatts');
 const xLog = require('xcraft-core-log')(moduleName);
@@ -199,10 +206,8 @@ class Host {
     this._busClient = new BusClient();
 
     if (this._isElectron) {
-      electron.app.once('ready', () => {
-        //pre-load window-manager
-        require('../lib/wm.js');
-      });
+      const WM = require('../lib/wm.js');
+      WM.instance.initBus();
     }
 
     const xBus = require('xcraft-core-bus');
