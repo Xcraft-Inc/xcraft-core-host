@@ -204,18 +204,8 @@ class Host {
     this._busClient._orcName = xBus.generateOrcName();
 
     if (this._isElectron) {
-      let isRunAsNode = false;
-      if (process._linkedBinding) {
-        const features = process._linkedBinding('electron_common_features');
-        if (features && features.isRunAsNodeEnabled) {
-          isRunAsNode = features.isRunAsNodeEnabled();
-        }
-      }
-
-      if (!isRunAsNode) {
-        const WM = require('../lib/wm.js');
-        WM.instance.initBus();
-      }
+      const WM = require('../lib/wm.js');
+      WM.instance.initBus();
     }
 
     if (xBus._commander.isModuleRegistered('horde')) {
