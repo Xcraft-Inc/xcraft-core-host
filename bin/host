@@ -145,7 +145,6 @@ class Host {
      * when this BusClient is used to send commands, an other orc name must
      * be used in order to handle properly all subscribes of events.
      */
-    this._busClient._orcName = xBus.generateOrcName();
     let connected = false;
 
     const _next = next.parallel();
@@ -190,7 +189,7 @@ class Host {
   *_bootstrapHorde() {
     const xHorde = require('xcraft-core-horde');
     if (xHorde.config.autoload) {
-      const resp = this._busClient.newResponse(moduleName, 'token');
+      const resp = this._busClient.newResponse(moduleName);
       yield xHorde.autoload(resp);
     }
   }
@@ -199,14 +198,16 @@ class Host {
     yield this._xServer.start(next);
 
     const {BusClient} = require('xcraft-core-busclient');
+    const xBus = require('xcraft-core-bus');
+
     this._busClient = new BusClient();
+    this._busClient._orcName = xBus.generateOrcName();
 
     if (this._isElectron) {
       const WM = require('../lib/wm.js');
       WM.instance.initBus();
     }
 
-    const xBus = require('xcraft-core-bus');
     if (xBus._commander.isModuleRegistered('horde')) {
       yield this._bootstrapHorde();
     }
