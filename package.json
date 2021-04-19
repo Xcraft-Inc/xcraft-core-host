@@ -12,6 +12,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "electron-default-menu": "^1.0.1",
     "gigawatts": "^4.0.1",
     "v8-compile-cache": "^2.2.0",
     "xcraft-core-bus": "^4.0.0",
