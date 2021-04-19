@@ -46,4 +46,10 @@ module.exports = [
     message: 'add custom command line options (yargs format)',
     default: null,
   },
+  {
+    type: 'confirm',
+    name: 'disableGoblinWM',
+    message: 'disable goblin-wm (splash) with electron',
+    default: false,
+  },
 ];
