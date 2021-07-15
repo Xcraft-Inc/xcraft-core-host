@@ -36,6 +36,9 @@ class Host {
     }, []);
     if (appArg.length > 0) {
       process.env.WESTEROS_APP = appArg[0];
+      if (!process.env.WESTEROS_APP_MASTER) {
+        process.env.WESTEROS_APP_MASTER = process.env.WESTEROS_APP;
+      }
     }
 
     const config = require('../lib/index.js');
