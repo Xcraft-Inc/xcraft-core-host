@@ -60,6 +60,10 @@ class Host {
       () => require('../lib/args-parsing.js')()
     );
 
+    this._xConfig = require('xcraft-core-etc')().load(moduleName);
+
+    xLog.dbg(`process arguments: ${process.argv.join(' ')}`);
+
     process.on('uncaughtException', (ex) => {
       xLog.err(
         `Please, ensure to yield properly all async calls: ${
@@ -67,8 +71,6 @@ class Host {
         }`
       );
     });
-
-    this._xConfig = require('xcraft-core-etc')().load(moduleName);
 
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
