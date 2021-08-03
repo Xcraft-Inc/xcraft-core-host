@@ -29,6 +29,15 @@
         }
       }
 
+      @keyframes bar {
+        0% {
+          background-position-x: 200%;
+        }
+        100% {
+          background-position-x: 0%;
+        }
+      }
+
       body {
         margin: 0;
         padding: 0;
@@ -67,6 +76,32 @@
         line-height: 1.5;
       }
 
+      #progress {
+        position: absolute;
+        left: 40px;
+        right: 40px;
+        bottom: 36%;
+        height: 12px;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #666, white 65%);
+        box-shadow: 0px 4px 10px #222;
+      }
+
+      #bar {
+        position: absolute;
+        left: 40px;
+        width: 8px;
+        bottom: 36%;
+        height: 8px;
+        margin: 2px;
+        background: linear-gradient(90deg, rgb(255, 20, 97), rgb(254, 133, 6), rgb(255, 20, 97));
+        background-size: 200% 200%;
+        border-radius: 6px;
+        transition: width 2s;
+        animation: 1.5s ease-in-out infinite normal;
+        animation-name: bar;
+      }
+
       #message::first-letter {
         text-transform: capitalize;
       }
@@ -81,28 +116,38 @@
       </svg>
     </div>
     <div id="message"></div>
+    <div id="progress"></div>
+    <div id="bar"></div>
     <script>
       require('electron').ipcRenderer.on('progress', (event, data) => {
         const {step, locale} = data;
-        const elem = document.getElementById('message');
+        const elemMessage = document.getElementById('message');
+        const elemBar = document.getElementById('bar');
+        // If width = 400px, bar width is from 8px to 316px.
         switch (step) {
           case 'waiting':
-            elem.innerHTML = 'Le serveur cherche une table libre';
+            elemMessage.innerHTML = 'Le serveur cherche une table libre';
+            elemBar.style.width = '59px';
             break;
           case 'boot':
-            elem.innerHTML = 'On allume la machine à café';
+            elemMessage.innerHTML = 'On allume la machine à café';
+            elemBar.style.width = '111px';
             break;
           case 'webpack':
-            elem.innerHTML = 'Emballage du chocolat par la marmotte';
+            elemMessage.innerHTML = 'Emballage du chocolat par la marmotte';
+            elemBar.style.width = '162px';
             break;
           case 'start':
-            elem.innerHTML = `On voit le bout du tunnel`;
+            elemMessage.innerHTML = `On voit le bout du tunnel`;
+            elemBar.style.width = '213px';
             break;
           case 'restore-session':
-            elem.innerHTML = 'On ressort de vieux dossiers';
+            elemMessage.innerHTML = 'On ressort de vieux dossiers';
+            elemBar.style.width = '265px';
             break;
           case 'ready':
-            elem.innerHTML = 'Le cake sort du four';
+            elemMessage.innerHTML = 'Le cake sort du four';
+            elemBar.style.width = '316px';
             break;
         }
       });
