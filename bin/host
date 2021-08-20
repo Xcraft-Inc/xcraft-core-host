@@ -115,6 +115,9 @@ class Host {
   }
 
   _terminate() {
+    if (this._unsubLineUpdated) {
+      this._unsubLineUpdated();
+    }
     if (this._busClient) {
       this._busClient.command.send('shutdown');
     }
@@ -177,6 +180,14 @@ class Host {
 
     connected = true;
     yield next.sync();
+
+    this._unsubLineUpdated = this._busClient.events.subscribe(
+      '*::warehouse.line-updated',
+      (msg) => {
+        const {Router} = require('xcraft-core-transport');
+        Router.updateLines(msg.data.type, msg.data.lineId, msg.data.orcName);
+      }
+    );
 
     xBus.notifyCmdsRegistry();
   }
