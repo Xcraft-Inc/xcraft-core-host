@@ -43,6 +43,13 @@ class Host {
 
     const config = require('../lib/index.js');
 
+    if (!process.env.WESTEROS_APP) {
+      process.env.WESTEROS_APP = config.appId;
+    }
+    if (!process.env.WESTEROS_APP_MASTER) {
+      process.env.WESTEROS_APP_MASTER = config.appMasterId;
+    }
+
     if (config.appEnv === 'release' && !process.env.NODE_ENV) {
       process.env.NODE_ENV = 'production';
     }
