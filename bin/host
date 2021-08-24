@@ -60,6 +60,7 @@ class Host {
     this._isElectron = isElectron;
     this._app = null;
     this._appConfigPath = config.appConfigPath;
+    this._ignoreCloseRequests = false;
 
     this._xServer = require('xcraft-server')(
       config.appConfigPath,
@@ -102,7 +103,20 @@ class Host {
         }
       }
 
-      this._app.on('window-all-closed', () => null);
+      this._app.on('window-all-closed', () => {
+        if (this._ignoreCloseRequests) {
+          const MsgBox = require('../lib/msgbox.js');
+          const alert = new MsgBox();
+          alert.open('waiting for application restart...');
+          return;
+        }
+        if (this._busClient && this._busClient.isConnected()) {
+          this._notifyAppClosed();
+        } else {
+          this._app.quit();
+        }
+      });
+
       // Specific for macOS
       this._app.on('open-file', (ev, filePath) => {
         if (this._busClient && this._busClient.isConnected()) {
@@ -121,6 +135,7 @@ class Host {
     watt.wrapAll(this);
   }
 
+  // FIXME: not 100% accurate..
   _terminate() {
     if (this._unsubLineUpdated) {
       this._unsubLineUpdated();
@@ -140,6 +155,10 @@ class Host {
       null,
       (err) => xLog.err(err)
     );
+  }
+
+  _notifyAppClosed() {
+    this._terminate();
   }
 
   _notifyNewInstance(commandLine, workingDirectory) {
@@ -166,6 +185,30 @@ class Host {
     const unsub = this._busClient.events.subscribe(`greathall::loaded`, () => {
       unsub();
       _next();
+    });
+
+    this._ignoreCloseRequests = false;
+    const onReconnect = (callback) => {
+      this._busClient
+        .on('reconnect', () => callback('done'))
+        .on('reconnect attempt', () => callback('attempt'));
+      return () => {
+        this._busClient.removeListener('reconnect', callback);
+        this._busClient.removeListener('reconnect attempt', callback);
+      };
+    };
+
+    onReconnect((status) => {
+      switch (status) {
+        case 'attempt':
+          this._ignoreCloseRequests = true;
+          xLog.warn('Connection lost with the server, attempt a reconnection');
+          break;
+        case 'done':
+          this._ignoreCloseRequests = false;
+          xLog.dbg('New connection done');
+          break;
+      }
     });
 
     const onCommandsRegistry = () => {
@@ -298,8 +341,6 @@ class Host {
           null,
           next
         );
-        // FIXME: not 100% accurate...
-        this._terminate();
       }
     } else {
       xBus.acceptIncoming();
