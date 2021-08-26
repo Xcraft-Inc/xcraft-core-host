@@ -232,10 +232,10 @@ class Host {
     yield next.sync();
 
     this._unsubLineUpdated = this._busClient.events.subscribe(
-      '*::warehouse.line-updated',
+      '*::warehouse.lines-updated',
       (msg) => {
         const {Router} = require('xcraft-core-transport');
-        Router.updateLines(msg.data.type, msg.data.lineId, msg.data.orcName);
+        Router.updateLines(msg.data.lines, msg.data.token, msg.data.generation);
       }
     );
 
