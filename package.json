@@ -14,10 +14,13 @@
   "dependencies": {
     "electron-default-menu": "^1.0.1",
     "gigawatts": "^4.0.1",
-    "v8-compile-cache": "^2.2.0",
+    "v8-compile-cache": "^2.3.0",
     "xcraft-core-bus": "^5.0.0",
+    "xcraft-core-busclient": "^5.0.0",
     "xcraft-core-etc": "^3.0.0",
+    "xcraft-core-horde": "^3.0.0",
     "xcraft-core-log": "^2.0.0",
+    "xcraft-core-transport": "^4.0.0",
     "xcraft-core-utils": "^4.0.0",
     "xcraft-server": "^5.0.0",
     "yargs": "^16.2.0"
