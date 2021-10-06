@@ -20,7 +20,7 @@ const xLog = require('xcraft-core-log')(moduleName);
 
 class Host {
   constructor(isElectron) {
-    /* Prepare WESTEROS_APP environment variable */
+    /* Prepare GOBLINS_APP environment variable */
     const appArg = process.argv.reduce((res, arg, it, arr) => {
       if (/^--app=/.test(arg)) {
         //                           --app=venture-trade-company
@@ -35,19 +35,19 @@ class Host {
       return res;
     }, []);
     if (appArg.length > 0) {
-      process.env.WESTEROS_APP = appArg[0];
-      if (!process.env.WESTEROS_APP_MASTER) {
-        process.env.WESTEROS_APP_MASTER = process.env.WESTEROS_APP;
+      process.env.GOBLINS_APP = appArg[0];
+      if (!process.env.GOBLINS_APP_MASTER) {
+        process.env.GOBLINS_APP_MASTER = process.env.GOBLINS_APP;
       }
     }
 
     const config = require('../lib/index.js');
 
-    if (!process.env.WESTEROS_APP) {
-      process.env.WESTEROS_APP = config.appId;
+    if (!process.env.GOBLINS_APP) {
+      process.env.GOBLINS_APP = config.appId;
     }
-    if (!process.env.WESTEROS_APP_MASTER) {
-      process.env.WESTEROS_APP_MASTER = config.appMasterId;
+    if (!process.env.GOBLINS_APP_MASTER) {
+      process.env.GOBLINS_APP_MASTER = config.appMasterId;
     }
 
     if (config.appEnv === 'release' && !process.env.NODE_ENV) {
