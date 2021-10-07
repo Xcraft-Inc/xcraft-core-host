@@ -61,6 +61,7 @@ class Host {
     this._app = null;
     this._appConfigPath = config.appConfigPath;
     this._ignoreCloseRequests = false;
+    this._powerSaveBlockerIds = [];
 
     this._xServer = require('xcraft-server')(
       config.appConfigPath,
@@ -82,7 +83,9 @@ class Host {
 
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
-      this._app = require('electron').app;
+      const {app, powerSaveBlocker} = require('electron');
+      this._app = app;
+
       if (this._xConfig.singleInstance) {
         const gotTheLock = this._app.requestSingleInstanceLock();
         if (!gotTheLock) {
@@ -126,6 +129,10 @@ class Host {
         }
         ev.preventDefault();
       });
+
+      for (const blockerType of this._xConfig.powerSaveBlockers) {
+        this._powerSaveBlockerIds.push(powerSaveBlocker.start(blockerType));
+      }
     } else {
       xLog.info(`node runtime detected`);
     }
@@ -142,6 +149,13 @@ class Host {
     }
     if (this._busClient) {
       this._busClient.command.send('shutdown');
+    }
+
+    if (this._isElectron) {
+      const {powerSaveBlocker} = require('electron');
+      for (const powerSaveId of this._powerSaveBlockerIds) {
+        powerSaveBlocker.stop(powerSaveId);
+      }
     }
   }
 

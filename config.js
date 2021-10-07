@@ -52,4 +52,11 @@ module.exports = [
     message: 'disable goblin-wm (splash) with electron',
     default: false,
   },
+  {
+    type: 'checkbox',
+    name: 'powerSaveBlockers',
+    message:
+      'power save blockers (electron), [prevent-app-suspension, prevent-display-sleep]',
+    default: [],
+  },
 ];
