@@ -275,6 +275,10 @@ class Host {
   }
 
   *boot(next) {
+    if (this._xConfig.prologModuleLoad) {
+      require(this._xConfig.prologModuleLoad);
+    }
+
     yield this._xServer.start(next);
 
     const {BusClient} = require('xcraft-core-busclient');

@@ -29,6 +29,12 @@ module.exports = [
     default: null,
   },
   {
+    type: 'input',
+    name: 'prologModuleLoad',
+    message: 'module loaded before the Xcraft server boot',
+    default: null,
+  },
+  {
     type: 'confirm',
     name: 'singleInstance',
     message: 'boolean to makes your application a Single Instance Application',
