@@ -280,7 +280,7 @@ class Host {
 
   *boot(next) {
     if (this._xConfig.prologModuleLoad) {
-      require(this._xConfig.prologModuleLoad);
+      require(this._xConfig.prologModuleLoad)(this);
     }
 
     yield this._xServer.start(next);
