@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 'use strict';
 
-require('v8-compile-cache');
-
 let electron;
 try {
   electron = require('electron');

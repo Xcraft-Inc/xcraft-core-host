@@ -14,7 +14,6 @@
   "dependencies": {
     "electron-default-menu": "^1.0.1",
     "gigawatts": "^4.0.1",
-    "v8-compile-cache": "^2.3.0",
     "xcraft-core-bus": "^5.0.0",
     "xcraft-core-busclient": "^5.0.0",
     "xcraft-core-etc": "^3.0.0",
