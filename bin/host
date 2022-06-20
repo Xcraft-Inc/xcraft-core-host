@@ -183,7 +183,11 @@ class Host {
       this._xConfig.openFileQuest,
       {filePaths: [filePath]},
       null,
-      (err) => xLog.err(err)
+      (err) => {
+        if (err) {
+          xLog.err(err.stack || err.message || err);
+        }
+      }
     );
   }
 
@@ -199,7 +203,11 @@ class Host {
       this._xConfig.newInstanceQuest,
       {commandLine, workingDirectory},
       null,
-      (err) => xLog.err(err)
+      (err) => {
+        if (err) {
+          xLog.err(err.stack || err.message || err);
+        }
+      }
     );
   }
 
