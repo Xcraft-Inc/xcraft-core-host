@@ -300,6 +300,8 @@ class Host {
 
   *boot(next) {
     if (this._xConfig.prologModuleLoad) {
+      /* Ensure that the event loop is empty (handle macOS open-file events), then continue */
+      yield setTimeout(next, 100);
       require(this._xConfig.prologModuleLoad)(this);
     }
 
