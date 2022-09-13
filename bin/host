@@ -254,9 +254,19 @@ class Host {
         return;
       }
       this._busClient.removeListener('commands.registry', onCommandsRegistry);
-      this._busClient.command.send('goblin._init', null, null, () => {}, {
-        forceNested: true,
-      });
+      this._busClient.command.send(
+        'goblin._init',
+        null,
+        null,
+        (err) => {
+          if (err) {
+            xLog.err(err);
+          }
+        },
+        {
+          forceNested: true,
+        }
+      );
     };
     this._busClient.on('commands.registry', onCommandsRegistry);
 
