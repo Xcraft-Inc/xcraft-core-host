@@ -28,10 +28,13 @@ const isElectron =
 
 const moduleName = 'xcraft-core-host';
 const watt = require('gigawatts');
+const EventEmitter = require('events');
 const xLog = require('xcraft-core-log')(moduleName);
 
-class Host {
+class Host extends EventEmitter {
   constructor(isElectron) {
+    super();
+
     /* Prepare GOBLINS_APP environment variable */
     const appArg = process.argv.reduce((res, arg, it, arr) => {
       if (/^--app=/.test(arg)) {
@@ -258,14 +261,8 @@ class Host {
         'goblin._init',
         null,
         null,
-        (err) => {
-          if (err) {
-            xLog.err(err);
-          }
-        },
-        {
-          forceNested: true,
-        }
+        (err) => this.emit('goblin.initialized', err),
+        {forceNested: true}
       );
     };
     this._busClient.on('commands.registry', onCommandsRegistry);
@@ -308,6 +305,71 @@ class Host {
     }
   }
 
+  *_startQuests(xBus, next) {
+    let alert;
+
+    this._startAndRunMainQuest(next.parallel());
+    if (this._app) {
+      const _next = next.parallel();
+      this._app
+        .whenReady()
+        .then(() => _next())
+        .catch(_next);
+
+      const appArgs = require('../lib/args-parsing.js')();
+
+      if (this._isElectron && appArgs['relaunch-reason']) {
+        const {app} = require('electron');
+        let message = `${app.getName()} is restarting, please wait...`;
+        if (appArgs) {
+          switch (appArgs['relaunch-reason']) {
+            case 'client-connection':
+              message = `${app.getName()} is restarting after a connection lose, please wait...`;
+              break;
+            case 'server-restart':
+              message = `${app.getName()} is restarting after a server restart, please wait...`;
+              break;
+          }
+        }
+
+        const MsgBox = require('../lib/msgbox.js');
+        alert = new MsgBox();
+        alert.open(message);
+      }
+    }
+
+    yield next.sync();
+
+    if (this._xConfig.afterLoadQuests) {
+      for (const quest of this._xConfig.afterLoadQuests) {
+        yield this._busClient.command.send(quest, null, null, next, {
+          forceNested: true,
+        });
+      }
+    }
+
+    xBus.acceptIncoming();
+
+    if (this.filePath) {
+      this._notifyOpenFile(this.filePath);
+      this.filePath = null;
+    }
+
+    if (alert) {
+      setTimeout(() => alert.close(), 4000);
+    }
+
+    if (this._xConfig.secondaryQuest) {
+      /* Start the secondary quest (electron ready) */
+      yield this._busClient.command.send(
+        this._xConfig.secondaryQuest,
+        null,
+        null,
+        next
+      );
+    }
+  }
+
   *boot(next) {
     if (this._xConfig.prologModuleLoad) {
       /* Ensure that the event loop is empty (handle macOS open-file events), then continue */
@@ -332,71 +394,19 @@ class Host {
       yield this._bootstrapHorde();
     }
 
-    yield this._init(xBus);
-
     if (this._xConfig.mainQuest) {
-      let alert;
-
-      this._startAndRunMainQuest(next.parallel());
-      if (this._app) {
-        const _next = next.parallel();
-        this._app
-          .whenReady()
-          .then(() => _next())
-          .catch(_next);
-
-        const appArgs = require('../lib/args-parsing.js')();
-
-        if (this._isElectron && appArgs['relaunch-reason']) {
-          const {app} = require('electron');
-          let message = `${app.getName()} is restarting, please wait...`;
-          if (appArgs) {
-            switch (appArgs['relaunch-reason']) {
-              case 'client-connection':
-                message = `${app.getName()} is restarting after a connection lose, please wait...`;
-                break;
-              case 'server-restart':
-                message = `${app.getName()} is restarting after a server restart, please wait...`;
-                break;
-            }
-          }
-
-          const MsgBox = require('../lib/msgbox.js');
-          alert = new MsgBox();
-          alert.open(message);
+      const _next = next.parallel();
+      this.on('goblin.initialized', (err) => {
+        if (err) {
+          _next(err);
+          return;
         }
-      }
+        this._startQuests(xBus, _next);
+      });
+      yield this._init(xBus);
       yield next.sync();
-
-      if (this._xConfig.afterLoadQuests) {
-        for (const quest of this._xConfig.afterLoadQuests) {
-          yield this._busClient.command.send(quest, null, null, next, {
-            forceNested: true,
-          });
-        }
-      }
-
-      xBus.acceptIncoming();
-
-      if (this.filePath) {
-        this._notifyOpenFile(this.filePath);
-        this.filePath = null;
-      }
-
-      if (alert) {
-        setTimeout(() => alert.close(), 4000);
-      }
-
-      if (this._xConfig.secondaryQuest) {
-        /* Start the secondary quest (electron ready) */
-        yield this._busClient.command.send(
-          this._xConfig.secondaryQuest,
-          null,
-          null,
-          next
-        );
-      }
     } else {
+      yield this._init(xBus);
       xBus.acceptIncoming();
     }
   }
