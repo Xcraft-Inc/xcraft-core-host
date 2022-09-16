@@ -84,7 +84,19 @@ class Host extends EventEmitter {
       () => require('../lib/args-parsing.js')()
     );
 
-    this._xConfig = require('xcraft-core-etc')().load(moduleName);
+    const xEtc = require('xcraft-core-etc')();
+
+    const appArgs = require('../lib/args-parsing.js')();
+    if (appArgs.nabu) {
+      /* because nabu is working with an external nabu-thrall server, AXON is mandatory */
+      const transportConfig = xEtc.load('xcraft-core-transport');
+      if (transportConfig.backends.indexOf('axon') === -1) {
+        transportConfig.backends.push('axon');
+      }
+      xEtc.saveRun('xcraft-core-transport', transportConfig);
+    }
+
+    this._xConfig = xEtc.load(moduleName);
 
     xLog.dbg(`process arguments: ${process.argv.join(' ')}`);
 
