@@ -414,5 +414,5 @@ class Host extends EventEmitter {
 
 const host = new Host(isElectron);
 host.boot().catch((err) => {
-  xLog.err(err);
+  xLog.err(err.stack || err.message || err);
 });
