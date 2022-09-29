@@ -226,6 +226,20 @@ class Host extends EventEmitter {
     );
   }
 
+  _getGoblinUser() {
+    const busConfig = require('xcraft-core-etc')().load('xcraft-core-bus');
+    const {resourcesPath} = require('xcraft-core-host');
+    const path = require('path');
+    const policiesJSONFile = path.join(resourcesPath, busConfig.policiesPath);
+    const {readJSONSync} = require('fs-extra');
+    const policies = readJSONSync(policiesJSONFile, {throws: false});
+    if (policies && policies.defaultSystemUserId) {
+      return `${policies.defaultSystemUserId}@system`;
+    } else {
+      return 'defaultSystemUser@system';
+    }
+  }
+
   *_init(xBus, next) {
     /* HACK: force and unusual orc name.
      * The problem is that the greathall::* topic is already registered, then
@@ -299,13 +313,15 @@ class Host extends EventEmitter {
     xBus.notifyCmdsRegistry();
   }
 
-  *_startAndRunMainQuest(next) {
+  *_startAndRunMainQuest(goblinUser, next) {
     /* Start the main quest (app bootstrap). */
     yield this._busClient.command.send(
       this._xConfig.mainQuest,
       null,
       null,
-      next
+      next,
+      null,
+      {_goblinUser: goblinUser}
     );
   }
 
@@ -319,8 +335,8 @@ class Host extends EventEmitter {
 
   *_startQuests(xBus, next) {
     let alert;
-
-    this._startAndRunMainQuest(next.parallel());
+    const goblinUser = this._getGoblinUser();
+    this._startAndRunMainQuest(goblinUser, next.parallel());
     if (this._app) {
       const _next = next.parallel();
       this._app
@@ -377,7 +393,9 @@ class Host extends EventEmitter {
         this._xConfig.secondaryQuest,
         null,
         null,
-        next
+        next,
+        null,
+        {_goblinUser: goblinUser}
       );
     }
   }
