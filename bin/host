@@ -15,8 +15,35 @@ Module._resolveFilename = function () {
   return result.replace(/^([a-z]):/, (c) => c.toUpperCase());
 };
 
+const moduleName = 'xcraft-core-host';
+const xLog = require('xcraft-core-log')(moduleName);
+
+function initializeNetworkStackForProxy() {
+  try {
+    const {HTTP_PROXY, HTTPS_PROXY} = process.env;
+    if (HTTP_PROXY || HTTPS_PROXY) {
+      process.env['GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE'] = ''; // this will erase the namespace for setting global-agent library env variables
+      if (HTTP_PROXY && !HTTP_PROXY.startsWith('http://')) {
+        process.env['HTTP_PROXY'] = `http://${process.env['HTTP_PROXY']}`;
+      }
+      if (HTTPS_PROXY && !HTTPS_PROXY.startsWith('https://')) {
+        process.env['HTTPS_PROXY'] = `https://${process.env['HTTPS_PROXY']}`;
+      }
+
+      const {bootstrap} = require('epsitec-global-agent');
+      bootstrap();
+    }
+  } catch (err) {
+    xLog.warn(
+      `cannot initialize network stack for proxy: ${err.message || err}`
+    );
+  }
+}
+
 let electron;
 try {
+  initializeNetworkStackForProxy();
+
   electron = require('electron');
 } catch (ex) {
   if (ex.code !== 'MODULE_NOT_FOUND') {
@@ -26,10 +53,8 @@ try {
 const isElectron =
   !!process.versions.electron && electron && typeof electron !== 'string';
 
-const moduleName = 'xcraft-core-host';
 const watt = require('gigawatts');
 const EventEmitter = require('events');
-const xLog = require('xcraft-core-log')(moduleName);
 
 class Host extends EventEmitter {
   constructor(isElectron) {
