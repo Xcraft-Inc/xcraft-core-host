@@ -1,6 +1,6 @@
 # Support en cas de blocage des logiciels par un proxy.
 
-Dans certaines infrastructures réseau, les logiciels Crésus peuvent afficher, durant l'installation ou leur utilisation, un message similaire à :
+Dans certaines infrastructures réseau, les logiciels Goblins peuvent afficher, durant l'installation ou leur utilisation, un message similaire à :
 
 ```
 connexion à Internet absente
