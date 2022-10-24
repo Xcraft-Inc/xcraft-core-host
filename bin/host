@@ -20,14 +20,18 @@ const xLog = require('xcraft-core-log')(moduleName);
 
 function initializeNetworkStackForProxy() {
   try {
-    const {HTTP_PROXY, HTTPS_PROXY} = process.env;
+    const {HTTP_PROXY, HTTPS_PROXY, NO_PROXY} = process.env;
     if (HTTP_PROXY || HTTPS_PROXY) {
       process.env['GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE'] = ''; // this will erase the namespace for setting global-agent library env variables
+      process.env['NO_PROXY'] = `127.0.0.1,localhost${
+        NO_PROXY ? `,${NO_PROXY}` : ''
+      }`; // avoid proxy for loopback communication
+
       if (HTTP_PROXY && !HTTP_PROXY.startsWith('http://')) {
-        process.env['HTTP_PROXY'] = `http://${process.env['HTTP_PROXY']}`;
+        process.env['HTTP_PROXY'] = `http://${HTTP_PROXY}`;
       }
       if (HTTPS_PROXY && !HTTPS_PROXY.startsWith('https://')) {
-        process.env['HTTPS_PROXY'] = `https://${process.env['HTTPS_PROXY']}`;
+        process.env['HTTPS_PROXY'] = `https://${HTTPS_PROXY}`;
       }
 
       const {bootstrap} = require('epsitec-global-agent');
