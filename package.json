@@ -31,5 +31,8 @@
     "xcraft-dev-prettier": "^2.0.0",
     "xcraft-dev-rules": "^2.0.0"
   },
+  "optionalDependencies": {
+    "node-windows-registry": "^0.1.2"
+  },
   "prettier": "xcraft-dev-prettier"
 }
