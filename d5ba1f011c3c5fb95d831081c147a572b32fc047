@@ -1,0 +1,9 @@
+[
+  {
+    "Module": "xcraft-core-host",
+    "Version": "v3.8.3",
+    "Hash": "d5ba1f0",
+    "Dev": "master",
+    "Prod": "3.8"
+  }
+]
