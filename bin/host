@@ -312,7 +312,12 @@ class Host extends EventEmitter {
       '*::warehouse.lines-updated',
       (msg) => {
         const {Router} = require('xcraft-core-transport');
-        Router.updateLines(msg.data.lines, msg.data.token, msg.data.generation);
+        Router.updateLines(
+          msg.data.lines,
+          msg.data.token,
+          msg.data.generation,
+          msg._xcraftHorde
+        );
       }
     );
 
