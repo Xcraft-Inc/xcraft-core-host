@@ -80,6 +80,7 @@ class Host extends EventEmitter {
     this._appConfigPath = config.appConfigPath;
     this._ignoreCloseRequests = false;
     this._powerSaveBlockerIds = [];
+    this._newInstanceSpawn = [];
 
     this._xServer = require('xcraft-server')(
       config.appConfigPath,
@@ -131,6 +132,8 @@ class Host extends EventEmitter {
                 );
                 if (this._busClient && this._busClient.isConnected()) {
                   this._notifyNewInstance(commandLine, workingDirectory);
+                } else {
+                  this._newInstanceSpawn.push({commandLine, workingDirectory});
                 }
               } catch (err) {
                 xLog.err(err.stack || err.message || err);
@@ -322,6 +325,10 @@ class Host extends EventEmitter {
     );
 
     xBus.notifyCmdsRegistry();
+
+    for (const {commandLine, workingDirectory} of this._newInstanceSpawn) {
+      this._notifyNewInstance(commandLine, workingDirectory);
+    }
   }
 
   *_startAndRunMainQuest(goblinUser, next) {
