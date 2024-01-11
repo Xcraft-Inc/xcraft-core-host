@@ -144,7 +144,8 @@ class Host extends EventEmitter {
         if (this._ignoreCloseRequests) {
           const MsgBox = require('../lib/msgbox.js');
           const alert = new MsgBox();
-          alert.open('waiting for application restart...');
+          alert.open();
+          alert.emit('Waiting for application restart...');
           return;
         }
         if (this._busClient && this._busClient.isConnected()) {
@@ -176,25 +177,45 @@ class Host extends EventEmitter {
     watt.wrapAll(this);
   }
 
-  *_waitForCoreGoblin(next) {
+  *_waitForSync(next) {
     let alert;
+    let databases;
+
+    const emit = () => {
+      if (!alert) {
+        return;
+      }
+      if (databases?.length) {
+        alert.emit(`Synchronizing ${databases.join(', ')}<br/>Please wait…`);
+      } else {
+        alert.emit(`Synchronizing<br/>Please wait…`);
+      }
+    };
 
     setTimeout(() => {
       const MsgBox = require('../lib/msgbox.js');
       alert = new MsgBox();
-      alert.open('Synchronizing, please wait');
+      alert.open();
+      emit();
     }, 500);
 
-    for (;;) {
+    for (let wait = false; ; wait = true) {
       const res = yield this._busClient.command.send(
         'goblin.tryShutdown',
-        null,
+        {wait},
         null,
         next
       );
       if (!res.data) {
         break;
       }
+
+      ({databases} = res.data);
+      if (!databases.length) {
+        break;
+      }
+
+      emit();
     }
 
     if (alert) {
@@ -209,7 +230,7 @@ class Host extends EventEmitter {
     );
 
     if (goblinConfig?.actionsSync?.enable) {
-      yield this._waitForCoreGoblin();
+      yield this._waitForSync();
     }
     if (this._unsubLineUpdated) {
       this._unsubLineUpdated();
@@ -406,7 +427,8 @@ class Host extends EventEmitter {
 
         const MsgBox = require('../lib/msgbox.js');
         alert = new MsgBox();
-        alert.open(message);
+        alert.open();
+        alert.emit(message);
       }
     }
 

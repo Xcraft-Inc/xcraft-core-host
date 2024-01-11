@@ -80,11 +80,13 @@
         />
       </svg>
     </div>
-    <div id="message">
-      <script>
-        const length = window.process.argv.length;
-        document.write(window.process.argv[length - 1]);
-      </script>
-    </div>
+    <div id="message"></div>
+    <script>
+      require('electron').ipcRenderer.on('progress', (event, data) => {
+        const {message} = data;
+        const elemMessage = document.getElementById('message');
+        elemMessage.innerHTML = message;
+      });
+    </script>
   </body>
 </html>
