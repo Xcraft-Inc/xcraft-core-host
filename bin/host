@@ -182,7 +182,7 @@ class Host extends EventEmitter {
     setTimeout(() => {
       const MsgBox = require('../lib/msgbox.js');
       alert = new MsgBox();
-      alert.open('wait for the synchronization...');
+      alert.open('Synchronizing, please wait');
     }, 500);
 
     for (;;) {
