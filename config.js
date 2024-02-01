@@ -65,4 +65,10 @@ module.exports = [
       'power save blockers (electron), [prevent-app-suspension, prevent-display-sleep]',
     default: [],
   },
+  {
+    type: 'confirm',
+    name: 'powerMonitorSweeper',
+    message: 'start the sweeper on locking',
+    default: false,
+  },
 ];

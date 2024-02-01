@@ -35,6 +35,9 @@ const watt = require('gigawatts');
 const EventEmitter = require('events');
 
 class Host extends EventEmitter {
+  #sweeped = false;
+  #idleStateInterval;
+
   constructor(isElectron) {
     super();
 
@@ -113,7 +116,7 @@ class Host extends EventEmitter {
 
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
-      const {app, powerSaveBlocker} = require('electron');
+      const {app, powerSaveBlocker, powerMonitor} = require('electron');
       this._app = app;
 
       if (this._xConfig.singleInstance) {
@@ -167,6 +170,21 @@ class Host extends EventEmitter {
 
       for (const blockerType of this._xConfig.powerSaveBlockers) {
         this._powerSaveBlockerIds.push(powerSaveBlocker.start(blockerType));
+      }
+
+      if (this._xConfig.powerMonitorSweeper) {
+        this.#idleStateInterval = setInterval(() => {
+          const idleState = powerMonitor.getSystemIdleState(30);
+          switch (idleState) {
+            case 'locked':
+              this._notifyPowerMonitorLock('locked');
+              break;
+            case 'active':
+            case 'unknown':
+              this._notifyPowerMonitorLock('unlocked');
+              break;
+          }
+        }, 1000);
       }
     } else {
       xLog.info(`node runtime detected`);
@@ -225,6 +243,11 @@ class Host extends EventEmitter {
 
   // FIXME: not 100% accurate..
   *_terminate(next) {
+    if (this.#idleStateInterval) {
+      clearInterval(this.#idleStateInterval);
+      this.#idleStateInterval = null;
+    }
+
     const goblinConfig = require('xcraft-core-etc')().load(
       'xcraft-core-goblin'
     );
@@ -261,6 +284,31 @@ class Host extends EventEmitter {
         }
       }
     );
+  }
+
+  _notifyPowerMonitorLock(status) {
+    if (!this._xConfig.powerMonitorSweeper) {
+      return;
+    }
+    if (!this._busClient || !this._busClient.isConnected()) {
+      return;
+    }
+    const hasSweeper = this._busClient.getCommandsNames()['cryo.sweep'];
+    if (!hasSweeper) {
+      return;
+    }
+    if (status === 'unlocked') {
+      this.#sweeped = false;
+      return;
+    }
+    if (status === 'locked' && !this.#sweeped) {
+      this._busClient.command.send('cryo.sweep', null, null, (err) => {
+        this.#sweeped = true;
+        if (err) {
+          xLog.err(err.stack || err.message || err);
+        }
+      });
+    }
   }
 
   _notifyAppClosed() {
