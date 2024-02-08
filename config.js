@@ -30,6 +30,12 @@ module.exports = [
   },
   {
     type: 'input',
+    name: 'openUrlQuest',
+    message: 'quest called when a registered url is opened',
+    default: null,
+  },
+  {
+    type: 'input',
     name: 'prologModuleLoad',
     message: 'module loaded before the Xcraft server boot',
     default: null,

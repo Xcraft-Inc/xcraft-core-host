@@ -168,6 +168,15 @@ class Host extends EventEmitter {
         ev.preventDefault();
       });
 
+      this._app.on('open-url', (ev, url) => {
+        if (this._busClient && this._busClient.isConnected()) {
+          this._notifyOpenUrl(url);
+        } else {
+          this.openUrl = url;
+        }
+        ev.preventDefault();
+      });
+
       for (const blockerType of this._xConfig.powerSaveBlockers) {
         this._powerSaveBlockerIds.push(powerSaveBlocker.start(blockerType));
       }
@@ -277,6 +286,22 @@ class Host extends EventEmitter {
     this._busClient.command.send(
       this._xConfig.openFileQuest,
       {filePaths: [filePath]},
+      null,
+      (err) => {
+        if (err) {
+          xLog.err(err.stack || err.message || err);
+        }
+      }
+    );
+  }
+
+  _notifyOpenUrl(url) {
+    if (!this._xConfig.openUrlQuest) {
+      return;
+    }
+    this._busClient.command.send(
+      this._xConfig.openUrlQuest,
+      {url},
       null,
       (err) => {
         if (err) {
@@ -495,6 +520,11 @@ class Host extends EventEmitter {
     if (this.filePath) {
       this._notifyOpenFile(this.filePath);
       this.filePath = null;
+    }
+
+    if (this.openUrl) {
+      this._notifyOpenUrl(this.openUrl);
+      this.openUrl = null;
     }
 
     if (alert) {
