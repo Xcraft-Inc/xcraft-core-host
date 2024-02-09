@@ -116,8 +116,12 @@ class Host extends EventEmitter {
 
     if (this._isElectron) {
       xLog.info(`electron runtime detected,`);
-      const {app, powerSaveBlocker, powerMonitor} = require('electron');
+      const {app, powerSaveBlocker, powerMonitor, protocol} = electron;
       this._app = app;
+
+      protocol.registerSchemesAsPrivileged([
+        {scheme: 'app', privileges: {standard: true}},
+      ]);
 
       if (this._xConfig.singleInstance) {
         const gotTheLock = this._app.requestSingleInstanceLock();
@@ -503,6 +507,23 @@ class Host extends EventEmitter {
         alert.open();
         alert.emit(message);
       }
+    }
+
+    if (this._isElectron) {
+      const {protocol} = electron;
+      protocol.handle('app', (req) => {
+        const {host, pathname} = new URL(req.url);
+        const path = require('node:path');
+        const fse = require('fs-extra');
+        const markdown = path.join(
+          __dirname,
+          '../../goblin-cresus/assets/.changelog',
+          host,
+          pathname
+        );
+        const stream = fse.createReadStream(markdown);
+        return new Response(stream);
+      });
     }
 
     yield next.sync();
