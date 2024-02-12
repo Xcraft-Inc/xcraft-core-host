@@ -315,6 +315,30 @@ class Host extends EventEmitter {
     );
   }
 
+  *_notifyProtocol(req, next) {
+    let {protocol, host, pathname, href} = new URL(req.url);
+    protocol = protocol.split(':', 1)[0];
+
+    if (!this._xConfig.protocols?.[protocol]) {
+      return;
+    }
+    if (!this._busClient || !this._busClient.isConnected()) {
+      return;
+    }
+
+    const result = yield this._busClient.command.send(
+      this._xConfig.protocols[protocol],
+      {protocol, host, pathname, href},
+      null,
+      next
+    );
+    if (result?.data) {
+      const fse = require('fs-extra');
+      const stream = fse.createReadStream(result.data);
+      return new Response(stream);
+    }
+  }
+
   _notifyPowerMonitorLock(status) {
     if (!this._xConfig.powerMonitorSweeper) {
       return;
@@ -511,19 +535,9 @@ class Host extends EventEmitter {
 
     if (this._isElectron) {
       const {protocol} = electron;
-      protocol.handle('app', (req) => {
-        const {host, pathname} = new URL(req.url);
-        const path = require('node:path');
-        const fse = require('fs-extra');
-        const markdown = path.join(
-          __dirname,
-          '../../goblin-cresus/assets/.changelog',
-          host,
-          pathname
-        );
-        const stream = fse.createReadStream(markdown);
-        return new Response(stream);
-      });
+      for (const proto of Object.keys(this._xConfig.protocols)) {
+        protocol.handle(proto, async (req) => await this._notifyProtocol(req));
+      }
     }
 
     yield next.sync();

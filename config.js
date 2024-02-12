@@ -77,4 +77,10 @@ module.exports = [
     message: 'start the sweeper on locking',
     default: false,
   },
+  {
+    type: 'input',
+    name: 'protocols',
+    message: 'map of protocols',
+    default: {},
+  },
 ];
