@@ -427,9 +427,14 @@ class Host extends EventEmitter {
     };
 
     onReconnect((status) => {
+      const goblinConfig = require('xcraft-core-etc')().load(
+        'xcraft-core-goblin'
+      );
+      const syncClientEnabled = goblinConfig.actionsSync?.enable;
+
       switch (status) {
         case 'attempt':
-          this._ignoreCloseRequests = true;
+          this._ignoreCloseRequests = syncClientEnabled ? false : true;
           xLog.warn('Connection lost with the server, attempt a reconnection');
           break;
         case 'done':
