@@ -128,10 +128,9 @@ class Host extends EventEmitter {
         if (!gotTheLock) {
           this._app.quit();
         } else {
-          const self = this;
-          function onSecondInstance(event, commandLine, workingDirectory) {
+          const onSecondInstance = (event, commandLine, workingDirectory) => {
             try {
-              if (!self._busClient || !self._busClient.isConnected()) {
+              if (!this._busClient || !this._busClient.isConnected()) {
                 setTimeout(
                   () => onSecondInstance(event, commandLine, workingDirectory),
                   100
@@ -143,13 +142,13 @@ class Host extends EventEmitter {
                 true,
                 commandLine
               );
-              if (self._busClient && self._busClient.isConnected()) {
-                self._notifyNewInstance(commandLine, workingDirectory);
+              if (this._busClient && this._busClient.isConnected()) {
+                this._notifyNewInstance(commandLine, workingDirectory);
               }
             } catch (err) {
               xLog.err(err.stack || err.message || err);
             }
-          }
+          };
 
           this._app.on('second-instance', onSecondInstance);
         }
