@@ -38,6 +38,8 @@ class Host extends EventEmitter {
   #sweeped = false;
   #idleStateInterval;
   #secondInstance = [];
+  #filePath = [];
+  #openUrl = [];
 
   constructor(isElectron) {
     super();
@@ -173,7 +175,7 @@ class Host extends EventEmitter {
         if (this._busClient && this._busClient.isConnected()) {
           this._notifyOpenFile(filePath);
         } else {
-          this.filePath = filePath;
+          this.#filePath.push(filePath);
         }
         ev.preventDefault();
       });
@@ -182,7 +184,7 @@ class Host extends EventEmitter {
         if (this._busClient && this._busClient.isConnected()) {
           this._notifyOpenUrl(url);
         } else {
-          this.openUrl = url;
+          this.#openUrl.push(url);
         }
         ev.preventDefault();
       });
@@ -572,15 +574,15 @@ class Host extends EventEmitter {
     }
     this.#secondInstance.length = 0;
 
-    if (this.filePath) {
-      this._notifyOpenFile(this.filePath);
-      this.filePath = null;
+    for (const filePath of this.#filePath) {
+      this._notifyOpenFile(filePath);
     }
+    this.#filePath.length = 0;
 
-    if (this.openUrl) {
-      this._notifyOpenUrl(this.openUrl);
-      this.openUrl = null;
+    for (const openUrl of this.#openUrl) {
+      this._notifyOpenUrl(openUrl);
     }
+    this.#openUrl.length = 0;
 
     if (alert) {
       setTimeout(() => alert.close(), 4000);
