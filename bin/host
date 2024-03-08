@@ -37,7 +37,7 @@ const EventEmitter = require('events');
 class Host extends EventEmitter {
   #sweeped = false;
   #idleStateInterval;
-  #secondInstance;
+  #secondInstance = [];
 
   constructor(isElectron) {
     super();
@@ -140,10 +140,10 @@ class Host extends EventEmitter {
                 if (this._busClient && this._busClient.isConnected()) {
                   this._notifyNewInstance(commandLine, workingDirectory);
                 } else {
-                  this.#secondInstance = {
+                  this.#secondInstance.push({
                     commandLine,
                     workingDirectory,
-                  };
+                  });
                 }
               } catch (err) {
                 xLog.err(err.stack || err.message || err);
@@ -563,15 +563,14 @@ class Host extends EventEmitter {
 
     xBus.acceptIncoming();
 
-    if (this.#secondInstance) {
-      const {commandLine, workingDirectory} = this.#secondInstance;
+    for (const {commandLine, workingDirectory} of this.#secondInstance) {
       try {
         this._notifyNewInstance(commandLine, workingDirectory);
       } catch (err) {
         xLog.err(err.stack || err.message || err);
       }
-      this.#secondInstance = null;
     }
+    this.#secondInstance.length = 0;
 
     if (this.filePath) {
       this._notifyOpenFile(this.filePath);
