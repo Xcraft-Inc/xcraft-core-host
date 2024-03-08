@@ -37,6 +37,7 @@ const EventEmitter = require('events');
 class Host extends EventEmitter {
   #sweeped = false;
   #idleStateInterval;
+  #secondInstance;
 
   constructor(isElectron) {
     super();
@@ -128,29 +129,27 @@ class Host extends EventEmitter {
         if (!gotTheLock) {
           this._app.quit();
         } else {
-          const onSecondInstance = (event, commandLine, workingDirectory) => {
-            try {
-              if (!this._busClient || !this._busClient.isConnected()) {
-                setTimeout(
-                  () => onSecondInstance(event, commandLine, workingDirectory),
-                  100
+          this._app.on(
+            'second-instance',
+            (event, commandLine, workingDirectory) => {
+              try {
+                commandLine = require('../lib/args-parsing.js')(
+                  true,
+                  commandLine
                 );
-                return;
+                if (this._busClient && this._busClient.isConnected()) {
+                  this._notifyNewInstance(commandLine, workingDirectory);
+                } else {
+                  this.#secondInstance = {
+                    commandLine,
+                    workingDirectory,
+                  };
+                }
+              } catch (err) {
+                xLog.err(err.stack || err.message || err);
               }
-
-              commandLine = require('../lib/args-parsing.js')(
-                true,
-                commandLine
-              );
-              if (this._busClient && this._busClient.isConnected()) {
-                this._notifyNewInstance(commandLine, workingDirectory);
-              }
-            } catch (err) {
-              xLog.err(err.stack || err.message || err);
             }
-          };
-
-          this._app.on('second-instance', onSecondInstance);
+          );
         }
       }
 
@@ -563,6 +562,16 @@ class Host extends EventEmitter {
     }
 
     xBus.acceptIncoming();
+
+    if (this.#secondInstance) {
+      const {commandLine, workingDirectory} = this.#secondInstance;
+      try {
+        this._notifyNewInstance(commandLine, workingDirectory);
+      } catch (err) {
+        xLog.err(err.stack || err.message || err);
+      }
+      this.#secondInstance = null;
+    }
 
     if (this.filePath) {
       this._notifyOpenFile(this.filePath);
