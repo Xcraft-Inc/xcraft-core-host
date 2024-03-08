@@ -128,22 +128,30 @@ class Host extends EventEmitter {
         if (!gotTheLock) {
           this._app.quit();
         } else {
-          this._app.on(
-            'second-instance',
-            (event, commandLine, workingDirectory) => {
-              try {
-                commandLine = require('../lib/args-parsing.js')(
-                  true,
-                  commandLine
+          const self = this;
+          function onSecondInstance(event, commandLine, workingDirectory) {
+            try {
+              if (!self._busClient || !self._busClient.isConnected()) {
+                setTimeout(
+                  () => onSecondInstance(event, commandLine, workingDirectory),
+                  100
                 );
-                if (this._busClient && this._busClient.isConnected()) {
-                  this._notifyNewInstance(commandLine, workingDirectory);
-                }
-              } catch (err) {
-                xLog.err(err.stack || err.message || err);
+                return;
               }
+
+              commandLine = require('../lib/args-parsing.js')(
+                true,
+                commandLine
+              );
+              if (self._busClient && self._busClient.isConnected()) {
+                self._notifyNewInstance(commandLine, workingDirectory);
+              }
+            } catch (err) {
+              xLog.err(err.stack || err.message || err);
             }
-          );
+          }
+
+          this._app.on('second-instance', onSecondInstance);
         }
       }
 
