@@ -216,6 +216,10 @@ class Host extends EventEmitter {
     watt.wrapAll(this);
   }
 
+  get filePath() {
+    return this.#filePath;
+  }
+
   *_waitForSync(next) {
     let alert;
     let databases;
