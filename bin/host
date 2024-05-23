@@ -131,27 +131,18 @@ class Host extends EventEmitter {
         if (!gotTheLock) {
           this._app.quit();
         } else {
-          this._app.on(
-            'second-instance',
-            (event, commandLine, workingDirectory) => {
-              try {
-                commandLine = require('../lib/args-parsing.js')(
-                  true,
-                  commandLine
-                );
-                if (this._busClient && this._busClient.isConnected()) {
-                  this._notifyNewInstance(commandLine, workingDirectory);
-                } else {
-                  this.#secondInstance.push({
-                    commandLine,
-                    workingDirectory,
-                  });
-                }
-              } catch (err) {
-                xLog.err(err.stack || err.message || err);
+          this._app.on('second-instance', (event, rawArgs, workingDir) => {
+            try {
+              const args = require('../lib/args-parsing.js')(true, rawArgs);
+              if (this._busClient && this._busClient.isConnected()) {
+                this._notifyNewInstance(args, workingDir, rawArgs);
+              } else {
+                this.#secondInstance.push({args, workingDir, rawArgs});
               }
+            } catch (err) {
+              xLog.err(err.stack || err.message || err);
             }
-          );
+          });
         }
       }
 
@@ -380,13 +371,13 @@ class Host extends EventEmitter {
     this._terminate();
   }
 
-  _notifyNewInstance(commandLine, workingDirectory) {
+  _notifyNewInstance(args, workingDir, rawArgs) {
     if (!this._xConfig.newInstanceQuest) {
       return;
     }
     this._busClient.command.send(
       this._xConfig.newInstanceQuest,
-      {commandLine, workingDirectory},
+      {commandLine: args, workingDirectory: workingDir, rawArgs},
       null,
       (err) => {
         if (err) {
@@ -569,9 +560,9 @@ class Host extends EventEmitter {
 
     xBus.acceptIncoming();
 
-    for (const {commandLine, workingDirectory} of this.#secondInstance) {
+    for (const {args, workingDir, rawArgs} of this.#secondInstance) {
       try {
-        this._notifyNewInstance(commandLine, workingDirectory);
+        this._notifyNewInstance(args, workingDir, rawArgs);
       } catch (err) {
         xLog.err(err.stack || err.message || err);
       }
