@@ -133,6 +133,9 @@ class Host extends EventEmitter {
         } else {
           this._app.on('second-instance', (event, rawArgs, workingDir) => {
             try {
+              const WM = require('../lib/wm.js');
+              WM.instance.focus();
+
               const args = require('../lib/args-parsing.js')(true, rawArgs);
               if (this._busClient && this._busClient.isConnected()) {
                 this._notifyNewInstance(args, workingDir, rawArgs);
