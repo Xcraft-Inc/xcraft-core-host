@@ -44,12 +44,24 @@ class Host extends EventEmitter {
   #filePath = [];
   #openUrl = [];
   #config = null;
+  _app = null;
 
-  constructor(initialConfig, isElectron) {
+  constructor() {
     super();
 
-    const config = configBuilder(initialConfig);
+    if (isElectron) {
+      const {app} = require('electron');
+      this._app = app;
+    }
+
+    watt.wrapAll(this);
+  }
+
+  async load(initialConfig) {
+    let config = configBuilder(initialConfig);
+    config = await this.selectRealm(config);
     this.#config = config;
+
     globalThis.xHostConfig = this.#config;
     if (!process.env.GOBLINS_APP) {
       process.env.GOBLINS_APP = config.appId;
@@ -65,8 +77,7 @@ class Host extends EventEmitter {
     if (!process.env.XCRAFT_LOG && process.env.NODE_ENV !== 'development') {
       process.env.XCRAFT_LOG = '2';
     }
-    this._isElectron = isElectron;
-    this._app = null;
+
     this._appConfigPath = config.appConfigPath;
     this._ignoreCloseRequests = false;
     this._powerSaveBlockerIds = [];
@@ -78,6 +89,15 @@ class Host extends EventEmitter {
     );
 
     const xEtc = require('xcraft-core-etc')();
+
+    if (isElectron && !config.useRealms) {
+      const {app} = require('electron');
+      await app.whenReady();
+      if (!this.WM) {
+        this.WM = require('../lib/wm.js');
+      }
+      this.WM.instance.loadConfig();
+    }
 
     const appArgs = require('../lib/args-parsing.js')();
     if (appArgs.nabu) {
@@ -101,14 +121,8 @@ class Host extends EventEmitter {
       );
     });
 
-    if (this._isElectron) {
-      xLog.info(`electron runtime detected,`);
-      const {app, powerSaveBlocker, powerMonitor, protocol} = electron;
-      this._app = app;
-
-      protocol.registerSchemesAsPrivileged([
-        {scheme: 'app', privileges: {standard: true}},
-      ]);
+    if (isElectron) {
+      const {powerSaveBlocker, powerMonitor} = electron;
 
       if (this._xConfig.singleInstance) {
         const gotTheLock = this._app.requestSingleInstanceLock();
@@ -190,8 +204,33 @@ class Host extends EventEmitter {
     }
 
     xLog.info(`config; ${JSON.stringify(config, null, 2)}`);
+  }
 
-    watt.wrapAll(this);
+  async selectRealm(config) {
+    let selectedRealm = null;
+
+    if (config.useRealms) {
+      await this._app.whenReady();
+      this.WM = require('../lib/wm.js');
+
+      if (config.realmFiles.length > 1) {
+        selectedRealm = await this.WM.instance.prompt({
+          values: config.realmFiles,
+        });
+      } else {
+        selectedRealm = config.realmFiles[0];
+        this.WM.instance.displaySplash();
+      }
+    }
+
+    if (selectedRealm) {
+      xLog.dbg(`selected realm: ${selectedRealm}`);
+      config.variantId = selectedRealm.replace(/\.ork$/, '');
+      //const realmPath = path.join(this.#config.realmsStorePath, selectedRealm);
+      //const xEtc = require('xcraft-core-etc')();
+    }
+
+    return config;
   }
 
   get config() {
@@ -269,7 +308,7 @@ class Host extends EventEmitter {
       this._busClient.command.send('shutdown');
     }
 
-    if (this._isElectron) {
+    if (isElectron) {
       const {powerSaveBlocker} = require('electron');
       for (const powerSaveId of this._powerSaveBlockerIds) {
         powerSaveBlocker.stop(powerSaveId);
@@ -511,7 +550,7 @@ class Host extends EventEmitter {
 
       const appArgs = require('../lib/args-parsing.js')();
 
-      if (this._isElectron && appArgs['relaunch-reason']) {
+      if (isElectron && appArgs['relaunch-reason']) {
         const {app} = require('electron');
         let message = `${app.getName()} is restarting, please wait...`;
         if (appArgs) {
@@ -532,7 +571,7 @@ class Host extends EventEmitter {
       }
     }
 
-    if (this._isElectron) {
+    if (isElectron) {
       const {protocol} = electron;
       for (const proto of Object.keys(this._xConfig.protocols)) {
         protocol.handle(proto, async (req) => await this._notifyProtocol(req));
@@ -594,32 +633,13 @@ class Host extends EventEmitter {
       require(this._xConfig.prologModuleLoad)(this);
     }
 
-    let WM;
-    let selectedRealm = null;
-    if (this.#config.useRealms) {
-      if (this._isElectron && this.#config.realmFiles.length > 1) {
-        yield this._app.whenReady();
-        WM = require('../lib/wm.js');
-
-        selectedRealm = yield WM.instance.prompt({
-          values: this.#config.realmFiles,
-        });
-      } else {
-        selectedRealm = this.#config.realmFiles[0];
-      }
-    }
-
-    if (selectedRealm) {
-      xLog.dbg(`selected realm: ${selectedRealm}`);
-    }
-
     yield this._xServer.start(next);
 
-    if (this._isElectron && !this._xConfig.disableGoblinWM) {
-      if (!WM) {
-        WM = require('../lib/wm.js');
+    if (isElectron && !this._xConfig.disableGoblinWM) {
+      if (!this.WM) {
+        this.WM = require('../lib/wm.js');
       }
-      WM.instance.init(this);
+      this.WM.instance.init(this);
     }
 
     const {BusClient} = require('xcraft-core-busclient');
@@ -672,11 +692,21 @@ if (appArg.length > 0) {
 }
 
 const run = async () => {
+  if (isElectron) {
+    xLog.info(`electron runtime detected,`);
+    const {protocol} = electron;
+
+    protocol.registerSchemesAsPrivileged([
+      {scheme: 'app', privileges: {standard: true}},
+    ]);
+  }
+
   const initialConfig = await initialConfigLoader(appArg, isElectron);
   if (!initialConfig) {
     return;
   }
-  const host = new Host(initialConfig, isElectron);
+  const host = new Host();
+  await host.load(initialConfig);
   host.boot().catch((err) => {
     xLog.err(err.stack || err.message || err);
   });
