@@ -226,10 +226,36 @@ class Host extends EventEmitter {
     }
 
     if (selectedRealm) {
+      const path = require('path');
+      const fse = require('fs-extra');
+
       xLog.dbg(`selected realm: ${selectedRealm}`);
+
       config.variantId = selectedRealm.replace(/\.ork$/, '');
-      //const realmPath = path.join(this.#config.realmsStorePath, selectedRealm);
-      //const xEtc = require('xcraft-core-etc')();
+      config.appConfigPath = path.join(
+        config.appData,
+        config.appCompany,
+        config.variantId ? `${config.appId}-${config.variantId}` : config.appId
+      );
+
+      const realmPath = path.join(config.realmsStorePath, selectedRealm);
+      const xcraftRoot = path.join(
+        config.appData,
+        config.appCompany,
+        `${config.appId}-${config.variantId}`
+      );
+
+      const overrider = fse.readJSONSync(realmPath);
+      require('xcraft-server/lib/init-env.js')(
+        xcraftRoot,
+        config.projectPath,
+        null,
+        overrider
+      );
+      skipEnv = true;
+
+      delete process.env.GOBLINS_APP;
+      delete process.env.GOBLINS_APP_MASTER;
     }
 
     return {config, skipEnv};
