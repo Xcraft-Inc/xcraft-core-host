@@ -3,6 +3,9 @@
 A realm is a security policy domain defined for a "thrall" server.
 The protected resources on a server can be partitioned into a set of protection spaces, each with its own authentication scheme and/or authorization database containing a collection of users and groups.
 
+For realm support you must add this line in the goblins.json:
+`"useRealms": true`
+
 # Content of a "Ork Realm Key"
 
 Realm key is a JSON file with a dedicated extensions .ork

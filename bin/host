@@ -20,6 +20,9 @@ if (process.platform === 'win32') {
 const moduleName = 'xcraft-core-host';
 const xLog = require('xcraft-core-log')(moduleName);
 
+const initialConfigLoader = require('../lib/initialConfigLoader.js');
+const configBuilder = require('../lib/configBuilder.js');
+
 let electron;
 try {
   electron = require('electron');
@@ -66,7 +69,8 @@ class Host extends EventEmitter {
       }
     }
 
-    const config = require('../lib/index.js');
+    const initialConfig = initialConfigLoader(isElectron);
+    const config = configBuilder(initialConfig);
 
     if (!process.env.GOBLINS_APP) {
       process.env.GOBLINS_APP = config.appId;
