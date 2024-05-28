@@ -5,6 +5,12 @@
  */
 module.exports = [
   {
+    type: 'confirm',
+    name: 'useRealms',
+    message: 'define usage of realm key or not',
+    default: false,
+  },
+  {
     type: 'input',
     name: 'mainQuest',
     message: 'main quest to start',
