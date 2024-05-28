@@ -17,8 +17,13 @@ by core-host.
   "xcraft-core-horde": {
     "topology": {
       "yeti-thrall": {
-        "host": "192.168.7.56"
+        "host": "127.0.0.1"
       }
+    }
+  },
+  "goblin-wm": {
+    "windowOptions": {
+      "title": "Yeti - REALM"
     }
   }
 }

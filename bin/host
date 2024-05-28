@@ -43,35 +43,14 @@ class Host extends EventEmitter {
   #secondInstance = [];
   #filePath = [];
   #openUrl = [];
-  #useRealms = false;
+  #config = null;
 
-  constructor(isElectron) {
+  constructor(initialConfig, isElectron) {
     super();
 
-    /* Prepare GOBLINS_APP environment variable */
-    const appArg = process.argv.reduce((res, arg, it, arr) => {
-      if (/^--app=/.test(arg)) {
-        //                           --app=venture-trade-company
-        res.unshift(arg.split('=')[1]);
-      } else if (
-        /^-[b-z]+a$/.test(arg) || //   -da venture-trade-company
-        arg === '-a' || //              -a venture-trade-company
-        arg === '--app' //           --app venture-trade-company
-      ) {
-        res.unshift(arr[it + 1]);
-      }
-      return res;
-    }, []);
-    if (appArg.length > 0) {
-      process.env.GOBLINS_APP = appArg[0];
-      if (!process.env.GOBLINS_APP_MASTER) {
-        process.env.GOBLINS_APP_MASTER = process.env.GOBLINS_APP;
-      }
-    }
-
-    const initialConfig = initialConfigLoader(isElectron);
     const config = configBuilder(initialConfig);
-
+    this.#config = config;
+    globalThis.xHostConfig = this.#config;
     if (!process.env.GOBLINS_APP) {
       process.env.GOBLINS_APP = config.appId;
     }
@@ -213,6 +192,13 @@ class Host extends EventEmitter {
     xLog.info(`config; ${JSON.stringify(config, null, 2)}`);
 
     watt.wrapAll(this);
+  }
+
+  get config() {
+    if (!this.#config) {
+      throw new Error('Host config not ready');
+    }
+    return this.#config;
   }
 
   get filePath() {
@@ -646,7 +632,35 @@ class Host extends EventEmitter {
   }
 }
 
-const host = new Host(isElectron);
-host.boot().catch((err) => {
-  xLog.err(err.stack || err.message || err);
-});
+/* Prepare GOBLINS_APP environment variable */
+const appArg = process.argv.reduce((res, arg, it, arr) => {
+  if (/^--app=/.test(arg)) {
+    //                           --app=venture-trade-company
+    res.unshift(arg.split('=')[1]);
+  } else if (
+    /^-[b-z]+a$/.test(arg) || //   -da venture-trade-company
+    arg === '-a' || //              -a venture-trade-company
+    arg === '--app' //           --app venture-trade-company
+  ) {
+    res.unshift(arr[it + 1]);
+  }
+  return res;
+}, []);
+if (appArg.length > 0) {
+  process.env.GOBLINS_APP = appArg[0];
+  if (!process.env.GOBLINS_APP_MASTER) {
+    process.env.GOBLINS_APP_MASTER = process.env.GOBLINS_APP;
+  }
+}
+
+const run = async () => {
+  const initialConfig = await initialConfigLoader(appArg, isElectron);
+  if (!initialConfig) {
+    return;
+  }
+  const host = new Host(initialConfig, isElectron);
+  host.boot().catch((err) => {
+    xLog.err(err.stack || err.message || err);
+  });
+};
+run();
