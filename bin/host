@@ -93,13 +93,18 @@ class Host extends EventEmitter {
 
     const xEtc = require('xcraft-core-etc')();
 
-    if (isElectron && !config.useRealms) {
-      const {app} = require('electron');
-      await app.whenReady();
+    if (isElectron) {
+      if (!config.useRealms) {
+        const {app} = require('electron');
+        await app.whenReady();
+      }
       if (!this.WM) {
         this.WM = require('../lib/wm.js');
       }
       this.WM.instance.loadConfig();
+      if (!config.useRealms) {
+        this.WM.instance.loadSplash();
+      }
     }
 
     const appArgs = require('../lib/args-parsing.js')();
