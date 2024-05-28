@@ -594,18 +594,39 @@ class Host extends EventEmitter {
       require(this._xConfig.prologModuleLoad)(this);
     }
 
+    let WM;
+    let selectedRealm = null;
+    if (this.#config.useRealms) {
+      if (this._isElectron && this.#config.realmFiles.length > 1) {
+        yield this._app.whenReady();
+        WM = require('../lib/wm.js');
+
+        selectedRealm = yield WM.instance.prompt({
+          values: this.#config.realmFiles,
+        });
+      } else {
+        selectedRealm = this.#config.realmFiles[0];
+      }
+    }
+
+    if (selectedRealm) {
+      xLog.dbg(`selected realm: ${selectedRealm}`);
+    }
+
     yield this._xServer.start(next);
+
+    if (this._isElectron && !this._xConfig.disableGoblinWM) {
+      if (!WM) {
+        WM = require('../lib/wm.js');
+      }
+      WM.instance.init(this);
+    }
 
     const {BusClient} = require('xcraft-core-busclient');
     const xBus = require('xcraft-core-bus');
 
     this._busClient = new BusClient();
     this._busClient._orcName = xBus.generateOrcName();
-
-    if (this._isElectron && !this._xConfig.disableGoblinWM) {
-      const WM = require('../lib/wm.js');
-      WM.instance.init(this);
-    }
 
     if (xBus._commander.isModuleRegistered('horde')) {
       yield this._bootstrapHorde();
