@@ -64,7 +64,9 @@ class Host extends EventEmitter {
 
     globalThis.xHostConfig = this.#config;
     if (!process.env.GOBLINS_APP) {
-      process.env.GOBLINS_APP = config.appId;
+      process.env.GOBLINS_APP = config.variantId
+        ? `${config.appId}@${config.variantId}`
+        : config.appId;
     }
     if (!process.env.GOBLINS_APP_MASTER) {
       process.env.GOBLINS_APP_MASTER = config.appMasterId;
