@@ -195,9 +195,6 @@ class Host extends EventEmitter {
   }
 
   get config() {
-    if (!this.#config) {
-      throw new Error('Host config not ready');
-    }
     return this.#config;
   }
 
