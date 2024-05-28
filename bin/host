@@ -58,8 +58,8 @@ class Host extends EventEmitter {
   }
 
   async load(initialConfig) {
-    let config = configBuilder(initialConfig);
-    config = await this.selectRealm(config);
+    initialConfig = configBuilder(initialConfig);
+    const {config, skipEnv} = await this.selectRealm(initialConfig);
     this.#config = config;
 
     globalThis.xHostConfig = this.#config;
@@ -85,7 +85,8 @@ class Host extends EventEmitter {
     this._xServer = require('xcraft-server')(
       config.appConfigPath,
       config.projectPath,
-      () => require('../lib/args-parsing.js')()
+      () => require('../lib/args-parsing.js')(),
+      skipEnv
     );
 
     const xEtc = require('xcraft-core-etc')();
@@ -208,6 +209,7 @@ class Host extends EventEmitter {
 
   async selectRealm(config) {
     let selectedRealm = null;
+    let skipEnv = false;
 
     if (config.useRealms) {
       await this._app.whenReady();
@@ -230,7 +232,7 @@ class Host extends EventEmitter {
       //const xEtc = require('xcraft-core-etc')();
     }
 
-    return config;
+    return {config, skipEnv};
   }
 
   get config() {
