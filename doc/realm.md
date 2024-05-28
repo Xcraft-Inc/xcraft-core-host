@@ -9,8 +9,6 @@ Realm key is a JSON file with a dedicated extensions .ork
 In fact it's just an portable config file creating an variant on the fly when loaded
 by core-host.
 
-## Xcraft config overrides
-
 ```json
 {
   "xcraft-core-horde": {
@@ -23,6 +21,9 @@ by core-host.
 }
 ```
 
-## Server "realm" key
+The server or "guest" client certificate can be provided as BASE64 property.
 
-## Client "guest" key
+# User realm key storage
+
+Available realm keys is located in the fs, in the local app data folder of the company providing the app:
+`/{appData}/{appCompany}/xcraft-realms`
