@@ -40,6 +40,7 @@ class Host extends EventEmitter {
   #secondInstance = [];
   #filePath = [];
   #openUrl = [];
+  #useRealms = false;
 
   constructor(isElectron) {
     super();
@@ -106,7 +107,10 @@ class Host extends EventEmitter {
     }
 
     this._xConfig = xEtc.load(moduleName);
-
+    if (this._xConfig.useRealms) {
+      this.#useRealms = true;
+      xLog.dbg(`using realms with storage at: ${config.realmsStorePath}`);
+    }
     xLog.dbg(`process arguments: ${process.argv.join(' ')}`);
 
     process.on('uncaughtException', (ex) => {
