@@ -57,14 +57,57 @@ class Host extends EventEmitter {
     watt.wrapAll(this);
   }
 
+  async genRealmKeys() {
+    /*const util = require('util');
+    const {generateKeyPair} = require('crypto');
+    const gen = util.promisify(generateKeyPair);
+    const {publicKey, privateKey} = await gen('rsa', {
+      modulusLength: 4096,
+      publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem',
+      },
+      privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem',
+        cipher: 'aes-256-cbc',
+        passphrase: '',
+      },
+    });
+    xLog.dbg(publicKey);
+    xLog.dbg(privateKey);*/
+    return 'TODO';
+  }
+
+  checkRealmKeys() {
+    const path = require('path');
+    const fse = require('fs-extra');
+    const keyPath = path.join(
+      this.#config.realmsStorePath,
+      `${this.#config.variantId}-key.pem`
+    );
+    const certPath = path.join(
+      this.#config.realmsStorePath,
+      `${this.#config.variantId}-cert.pem`
+    );
+    const hasKey = fse.existsSync(keyPath);
+    const hasCert = fse.existsSync(certPath);
+    //TODO: check expire date ?
+    return hasKey && hasCert;
+  }
+
   async gatekeeper() {
     const {gatekeeper} = require('xcraft-core-etc')().load('xcraft-core-horde');
     if (!gatekeeper) {
       return;
     }
 
-    //TODO: check if a publickey is already registered
-    const publicKey = 'DUDEKEY';
+    const hasKeys = this.checkRealmKeys();
+    if (hasKeys) {
+      return;
+    }
+
+    const publicKey = await this.genRealmKeys();
     let failed;
     try {
       xLog.dbg('Registering with gatekeeper...');
