@@ -92,6 +92,52 @@ class Host extends EventEmitter {
     );
 
     const xEtc = require('xcraft-core-etc')();
+    if (isElectron && this.#config.useRealms) {
+      const {gatekeeper} = xEtc.load('xcraft-core-horde');
+      if (gatekeeper) {
+        //TODO: check if a publickey is already registered
+        const publicKey = 'DUDEKEY';
+        let failed;
+        try {
+          xLog.dbg('Registering with gatekeeper...');
+          const registerResp = await fetch(`${gatekeeper}/register`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({publicKey}),
+          });
+          const {providerUrl, waitingUrl} = await registerResp.json();
+          if (!this.WM) {
+            this.WM = require('../lib/wm.js');
+          }
+          xLog.dbg('Login with auth provider...');
+          const disposeAuth = this.WM.instance.displayAuth(
+            providerUrl,
+            true,
+            null,
+            true
+          );
+          const loginResp = await fetch(waitingUrl);
+          const {accepted} = await loginResp.json();
+          if (!accepted) {
+            failed = true;
+          }
+          xLog.dbg('Registration accepted!');
+          this.WM.instance.displaySplash(disposeAuth);
+        } catch (err) {
+          failed = true;
+          xLog.err('Cannot reach the gatekeeper:', err);
+        } finally {
+          if (failed) {
+            xLog.err('Gatekeeper process failed, exiting app...');
+            const {app} = require('electron');
+            app.exit(0);
+          }
+        }
+      }
+    }
 
     if (isElectron) {
       if (!config.useRealms) {
