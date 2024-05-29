@@ -218,7 +218,7 @@ class Host extends EventEmitter {
     let selectedRealm = null;
     let skipEnv = false;
 
-    if (config.useRealms) {
+    if (isElectron && config.useRealms) {
       await this._app.whenReady();
       this.WM = require('../lib/wm.js');
 

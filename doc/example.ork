@@ -1,5 +1,6 @@
 {
   "xcraft-core-horde": {
+    "gatekeeper": "http://localhost:9440"
     "topology": {
       "yeti-thrall": {
         "host": "127.0.0.1"
