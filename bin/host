@@ -57,29 +57,29 @@ class Host extends EventEmitter {
     watt.wrapAll(this);
   }
 
-  getRealmKeysPath() {
+  getRealmKeysPath(server) {
     const path = require('path');
     const keyPath = path.join(
       this.#config.realmsStorePath,
-      `${this.#config.variantId}-key.pem`
+      `${server}@${this.#config.variantId}-key.pem`
     );
     const certPath = path.join(
       this.#config.realmsStorePath,
-      `${this.#config.variantId}-cert.pem`
+      `${server}@${this.#config.variantId}-cert.pem`
     );
     return {keyPath, certPath};
   }
 
-  async saveRealmKeys(certPem, privateKeyPem) {
+  async saveRealmKeys(server, certPem, privateKeyPem) {
     const fse = require('fs-extra');
-    const {keyPath, certPath} = this.getRealmKeysPath();
+    const {keyPath, certPath} = this.getRealmKeysPath(server);
     await fse.writeFile(certPath, certPem);
     await fse.writeFile(keyPath, privateKeyPem);
   }
 
-  checkRealmKeys() {
+  checkRealmKeys(server) {
     const fse = require('fs-extra');
-    const {keyPath, certPath} = this.getRealmKeysPath();
+    const {keyPath, certPath} = this.getRealmKeysPath(server);
     const hasKey = fse.existsSync(keyPath);
     const hasCert = fse.existsSync(certPath);
     //TODO: check expire date ?
@@ -87,51 +87,53 @@ class Host extends EventEmitter {
   }
 
   async gatekeeper() {
-    const {gatekeeper} = require('xcraft-core-etc')().load('xcraft-core-horde');
-    if (!gatekeeper) {
-      return;
-    }
-
-    const hasKeys = this.checkRealmKeys();
-    if (hasKeys) {
-      return;
-    }
-
-    let failed;
-    try {
-      xLog.dbg('Registering with gatekeeper...');
-      const registerResp = await fetch(`${gatekeeper}/register`);
-      const {providerUrl, waitingUrl} = await registerResp.json();
-      if (!this.WM) {
-        this.WM = require('../lib/wm.js');
+    const {topology} = require('xcraft-core-etc')().load('xcraft-core-horde');
+    for (const [server, {gatekeeper}] of Object.entries(topology)) {
+      if (!gatekeeper) {
+        continue;
       }
-      xLog.dbg('Login with auth provider...');
-      const disposeAuth = this.WM.instance.displayAuth(
-        providerUrl,
-        true,
-        null,
-        true
-      );
-      const loginResp = await fetch(waitingUrl);
-      const {
-        accepted,
-        keys: {certPem, privateKeyPem},
-      } = await loginResp.json();
-      if (!accepted) {
+
+      const hasKeys = this.checkRealmKeys(server);
+      if (hasKeys) {
+        continue;
+      }
+
+      let failed;
+      try {
+        xLog.dbg('Registering with gatekeeper...');
+        const registerResp = await fetch(`${gatekeeper}/register`);
+        const {providerUrl, waitingUrl} = await registerResp.json();
+        if (!this.WM) {
+          this.WM = require('../lib/wm.js');
+        }
+        xLog.dbg('Login with auth provider...');
+        const disposeAuth = this.WM.instance.displayAuth(
+          providerUrl,
+          true,
+          null,
+          true
+        );
+        const loginResp = await fetch(waitingUrl);
+        const {
+          accepted,
+          keys: {certPem, privateKeyPem},
+        } = await loginResp.json();
+        if (!accepted) {
+          failed = true;
+        }
+        xLog.dbg('Registration accepted!');
+        await this.saveRealmKeys(server, certPem, privateKeyPem);
+        xLog.dbg('Realm keys saved');
+        this.WM.instance.displaySplash(disposeAuth);
+      } catch (err) {
         failed = true;
-      }
-      xLog.dbg('Registration accepted!');
-      await this.saveRealmKeys(certPem, privateKeyPem);
-      xLog.dbg('Realm keys saved');
-      this.WM.instance.displaySplash(disposeAuth);
-    } catch (err) {
-      failed = true;
-      xLog.err('Cannot reach the gatekeeper:', err);
-    } finally {
-      if (failed) {
-        xLog.err('Gatekeeper process failed, exiting app...');
-        const {app} = require('electron');
-        app.exit(0);
+        xLog.err('Cannot reach the gatekeeper:', err);
+      } finally {
+        if (failed) {
+          xLog.err('Gatekeeper process failed, exiting app...');
+          const {app} = require('electron');
+          app.exit(0);
+        }
       }
     }
   }
