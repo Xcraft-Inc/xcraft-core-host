@@ -57,44 +57,6 @@ class Host extends EventEmitter {
     watt.wrapAll(this);
   }
 
-  async genRealmKeys() {
-    const forge = require('node-forge');
-
-    const days = 36500;
-    const keys = forge.pki.rsa.generateKeyPair({bits: 4096, e: 0x10001});
-
-    const cert = forge.pki.createCertificate();
-    cert.publicKey = keys.publicKey;
-    cert.serialNumber = '01';
-    cert.validity.notBefore = new Date();
-    cert.validity.notAfter = new Date();
-    cert.validity.notAfter.setFullYear(
-      cert.validity.notBefore.getFullYear() + days / 365
-    );
-
-    const attrs = [
-      {name: 'commonName', value: 'Albert Schweizer'},
-      {name: 'countryName', value: 'CH'},
-      {name: 'stateOrProvinceName', value: 'Azeroth'},
-      {name: 'localityName', value: 'Dalaran'},
-      {name: 'organizationName', value: 'Xcraft'},
-      {name: 'emailAddress', value: 'albert@schweizer.ch'},
-    ];
-
-    cert.setSubject(attrs);
-    cert.setIssuer(attrs);
-    cert.sign(keys.privateKey);
-
-    const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
-    const certPem = forge.pki.certificateToPem(cert);
-
-    xLog.dbg(privateKeyPem);
-    xLog.dbg(certPem);
-
-    //fse.writeFileSync('key.pem', privateKeyPem);
-    //fse.writeFileSync('cert.pem', certPem);
-  }
-
   checkRealmKeys() {
     const path = require('path');
     const fse = require('fs-extra');
@@ -123,18 +85,10 @@ class Host extends EventEmitter {
       return;
     }
 
-    const publicKey = await this.genRealmKeys();
     let failed;
     try {
       xLog.dbg('Registering with gatekeeper...');
-      const registerResp = await fetch(`${gatekeeper}/register`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({publicKey}),
-      });
+      const registerResp = await fetch(`${gatekeeper}/register`);
       const {providerUrl, waitingUrl} = await registerResp.json();
       if (!this.WM) {
         this.WM = require('../lib/wm.js');
@@ -147,11 +101,16 @@ class Host extends EventEmitter {
         true
       );
       const loginResp = await fetch(waitingUrl);
-      const {accepted} = await loginResp.json();
+      const {
+        accepted,
+        keys: {certPem, privateKeyPem},
+      } = await loginResp.json();
       if (!accepted) {
         failed = true;
       }
       xLog.dbg('Registration accepted!');
+      xLog.dbg(certPem);
+      xLog.dbg(privateKeyPem);
       this.WM.instance.displaySplash(disposeAuth);
     } catch (err) {
       failed = true;
