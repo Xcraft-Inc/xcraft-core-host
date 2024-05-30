@@ -58,25 +58,41 @@ class Host extends EventEmitter {
   }
 
   async genRealmKeys() {
-    /*const util = require('util');
-    const {generateKeyPair} = require('crypto');
-    const gen = util.promisify(generateKeyPair);
-    const {publicKey, privateKey} = await gen('rsa', {
-      modulusLength: 4096,
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem',
-      },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-        cipher: 'aes-256-cbc',
-        passphrase: '',
-      },
-    });
-    xLog.dbg(publicKey);
-    xLog.dbg(privateKey);*/
-    return 'TODO';
+    const forge = require('node-forge');
+
+    const days = 36500;
+    const keys = forge.pki.rsa.generateKeyPair({bits: 4096, e: 0x10001});
+
+    const cert = forge.pki.createCertificate();
+    cert.publicKey = keys.publicKey;
+    cert.serialNumber = '01';
+    cert.validity.notBefore = new Date();
+    cert.validity.notAfter = new Date();
+    cert.validity.notAfter.setFullYear(
+      cert.validity.notBefore.getFullYear() + days / 365
+    );
+
+    const attrs = [
+      {name: 'commonName', value: 'Albert Schweizer'},
+      {name: 'countryName', value: 'CH'},
+      {name: 'stateOrProvinceName', value: 'Azeroth'},
+      {name: 'localityName', value: 'Dalaran'},
+      {name: 'organizationName', value: 'Xcraft'},
+      {name: 'emailAddress', value: 'albert@schweizer.ch'},
+    ];
+
+    cert.setSubject(attrs);
+    cert.setIssuer(attrs);
+    cert.sign(keys.privateKey);
+
+    const privateKeyPem = forge.pki.privateKeyToPem(keys.privateKey);
+    const certPem = forge.pki.certificateToPem(cert);
+
+    xLog.dbg(privateKeyPem);
+    xLog.dbg(certPem);
+
+    //fse.writeFileSync('key.pem', privateKeyPem);
+    //fse.writeFileSync('cert.pem', certPem);
   }
 
   checkRealmKeys() {
