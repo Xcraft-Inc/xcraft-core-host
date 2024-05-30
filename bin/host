@@ -146,11 +146,8 @@ class Host extends EventEmitter {
     const {config, skipEnv} = await this.selectRealm(initialConfig);
     this.#config = config;
 
-    if (globalThis.xHostConfig) {
-      Object.assign(globalThis.xHostConfig, this.#config);
-    } else {
-      globalThis.xHostConfig = this.#config;
-    }
+    const xHost = require('xcraft-core-host');
+    Object.assign(xHost, this.#config);
 
     if (!process.env.GOBLINS_APP) {
       process.env.GOBLINS_APP = config.variantId
@@ -354,6 +351,7 @@ class Host extends EventEmitter {
       delete process.env.GOBLINS_APP_MASTER;
     }
 
+    config._isMinimalConfig = false;
     return {config, skipEnv};
   }
 
