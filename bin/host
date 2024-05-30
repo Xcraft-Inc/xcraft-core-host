@@ -20,6 +20,8 @@ if (process.platform === 'win32') {
 const moduleName = 'xcraft-core-host';
 const xLog = require('xcraft-core-log')(moduleName);
 
+const fse = require('fs-extra');
+const path = require('node:path');
 const initialConfigLoader = require('../lib/initialConfigLoader.js');
 const configBuilder = require('../lib/configBuilder.js');
 
@@ -58,7 +60,6 @@ class Host extends EventEmitter {
   }
 
   getRealmKeysPath(server) {
-    const path = require('path');
     const keyPath = path.join(
       this.#config.realmsStorePath,
       `${server}@${this.#config.variantId}-key.pem`
@@ -71,14 +72,12 @@ class Host extends EventEmitter {
   }
 
   async saveRealmKeys(server, certPem, privateKeyPem) {
-    const fse = require('fs-extra');
     const {keyPath, certPath} = this.getRealmKeysPath(server);
     await fse.writeFile(certPath, certPem);
     await fse.writeFile(keyPath, privateKeyPem);
   }
 
   checkRealmKeys(server) {
-    const fse = require('fs-extra');
     const {keyPath, certPath} = this.getRealmKeysPath(server);
     const hasKey = fse.existsSync(keyPath);
     const hasCert = fse.existsSync(certPath);
@@ -317,9 +316,6 @@ class Host extends EventEmitter {
     }
 
     if (selectedRealm) {
-      const path = require('path');
-      const fse = require('fs-extra');
-
       xLog.dbg(`selected realm: ${selectedRealm}`);
 
       config.variantId = selectedRealm.replace(/\.ork$/, '');
@@ -485,7 +481,6 @@ class Host extends EventEmitter {
       next
     );
     if (result?.data) {
-      const fse = require('fs-extra');
       const stream = fse.createReadStream(result.data);
       return new Response(stream);
     }
@@ -539,7 +534,6 @@ class Host extends EventEmitter {
   _getGoblinUser() {
     const busConfig = require('xcraft-core-etc')().load('xcraft-core-bus');
     const {resourcesPath} = require('xcraft-core-host');
-    const path = require('path');
     const policiesJSONFile = path.join(resourcesPath, busConfig.policiesPath);
     const {readJSONSync} = require('fs-extra');
     const policies = readJSONSync(policiesJSONFile, {throws: false});
