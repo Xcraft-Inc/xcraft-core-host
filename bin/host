@@ -87,6 +87,7 @@ class Host extends EventEmitter {
 
   async gatekeeper() {
     const {topology} = require('xcraft-core-etc')().load('xcraft-core-horde');
+    let disposers = [];
     for (const [server, {gatekeeper}] of Object.entries(topology)) {
       if (!gatekeeper) {
         continue;
@@ -106,12 +107,15 @@ class Host extends EventEmitter {
           this.WM = require('../lib/wm.js');
         }
         xLog.dbg('Login with auth provider...');
-        const disposeAuth = this.WM.instance.displayAuth(
+        const disposer = this.WM.instance.displayAuth(
           providerUrl,
           true,
           null,
-          true
+          true,
+          server,
+          disposers[disposers.length - 1]
         );
+        disposers.push(disposer);
         const loginResp = await fetch(waitingUrl);
         const {
           accepted,
@@ -123,7 +127,6 @@ class Host extends EventEmitter {
         xLog.dbg('Registration accepted!');
         await this.saveRealmKeys(server, certPem, privateKeyPem);
         xLog.dbg('Realm keys saved');
-        this.WM.instance.displaySplash(disposeAuth);
       } catch (err) {
         failed = true;
         xLog.err('Cannot reach the gatekeeper:', err);
@@ -135,6 +138,7 @@ class Host extends EventEmitter {
         }
       }
     }
+    this.WM.instance.displaySplash(disposers[disposers.length - 1]);
   }
 
   async load(initialConfig) {
