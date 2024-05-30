@@ -57,9 +57,8 @@ class Host extends EventEmitter {
     watt.wrapAll(this);
   }
 
-  checkRealmKeys() {
+  getRealmKeysPath() {
     const path = require('path');
-    const fse = require('fs-extra');
     const keyPath = path.join(
       this.#config.realmsStorePath,
       `${this.#config.variantId}-key.pem`
@@ -68,6 +67,19 @@ class Host extends EventEmitter {
       this.#config.realmsStorePath,
       `${this.#config.variantId}-cert.pem`
     );
+    return {keyPath, certPath};
+  }
+
+  saveRealmKeys(certPem, privateKeyPem) {
+    const fse = require('fs-extra');
+    const {keyPath, certPath} = this.getRealmKeysPath();
+    fse.writeFile(certPath, certPem);
+    fse.writeFile(keyPath, privateKeyPem);
+  }
+
+  checkRealmKeys() {
+    const fse = require('fs-extra');
+    const {keyPath, certPath} = this.getRealmKeysPath();
     const hasKey = fse.existsSync(keyPath);
     const hasCert = fse.existsSync(certPath);
     //TODO: check expire date ?
@@ -109,8 +121,8 @@ class Host extends EventEmitter {
         failed = true;
       }
       xLog.dbg('Registration accepted!');
-      xLog.dbg(certPem);
-      xLog.dbg(privateKeyPem);
+      this.saveRealmKeys(certPem, privateKeyPem);
+      xLog.dbg('Realm keys saved');
       this.WM.instance.displaySplash(disposeAuth);
     } catch (err) {
       failed = true;
