@@ -146,7 +146,12 @@ class Host extends EventEmitter {
     const {config, skipEnv} = await this.selectRealm(initialConfig);
     this.#config = config;
 
-    globalThis.xHostConfig = this.#config;
+    if (globalThis.xHostConfig) {
+      Object.assign(globalThis.xHostConfig, this.#config);
+    } else {
+      globalThis.xHostConfig = this.#config;
+    }
+
     if (!process.env.GOBLINS_APP) {
       process.env.GOBLINS_APP = config.variantId
         ? `${config.appId}@${config.variantId}`
