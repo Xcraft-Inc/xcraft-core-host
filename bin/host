@@ -70,11 +70,11 @@ class Host extends EventEmitter {
     return {keyPath, certPath};
   }
 
-  saveRealmKeys(certPem, privateKeyPem) {
+  async saveRealmKeys(certPem, privateKeyPem) {
     const fse = require('fs-extra');
     const {keyPath, certPath} = this.getRealmKeysPath();
-    fse.writeFile(certPath, certPem);
-    fse.writeFile(keyPath, privateKeyPem);
+    await fse.writeFile(certPath, certPem);
+    await fse.writeFile(keyPath, privateKeyPem);
   }
 
   checkRealmKeys() {
@@ -121,7 +121,7 @@ class Host extends EventEmitter {
         failed = true;
       }
       xLog.dbg('Registration accepted!');
-      this.saveRealmKeys(certPem, privateKeyPem);
+      await this.saveRealmKeys(certPem, privateKeyPem);
       xLog.dbg('Realm keys saved');
       this.WM.instance.displaySplash(disposeAuth);
     } catch (err) {
