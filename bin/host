@@ -78,6 +78,16 @@ class Host extends EventEmitter {
     await fse.writeFile(keyPath, privateKeyPem);
   }
 
+  getRealmClientCertificateSubject(server) {
+    const pki = require('node-forge').pki;
+    const {certPath} = this.getRealmKeysPath(server);
+    const certPem = fse.readFileSync(certPath);
+    const cert = pki.certificateFromPem(certPem);
+    return Object.fromEntries(
+      cert.subject.attributes.map((attr) => [attr.shortName, attr.value])
+    );
+  }
+
   checkRealmKeys(server) {
     const {keyPath, certPath} = this.getRealmKeysPath(server);
     const hasKey = fse.existsSync(keyPath);
@@ -88,14 +98,16 @@ class Host extends EventEmitter {
 
   async gatekeeper() {
     const {topology} = require('xcraft-core-etc')().load('xcraft-core-horde');
+    let realmsUserLogin = {};
     let disposers = [];
     for (const [server, {gatekeeper}] of Object.entries(topology)) {
       if (!gatekeeper) {
         continue;
       }
-
       const hasKeys = this.checkRealmKeys(server);
       if (hasKeys) {
+        const {E} = this.getRealmClientCertificateSubject(server);
+        realmsUserLogin[server] = E;
         continue;
       }
 
@@ -119,9 +131,11 @@ class Host extends EventEmitter {
         disposers.push(disposer);
         const loginResp = await fetch(waitingUrl);
         const {
+          login,
           accepted,
           keys: {certPem, privateKeyPem},
         } = await loginResp.json();
+        realmsUserLogin[server] = login;
         if (!accepted) {
           failed = true;
         }
@@ -140,6 +154,7 @@ class Host extends EventEmitter {
       }
     }
     this.WM.instance.displaySplash(disposers[disposers.length - 1]);
+    return realmsUserLogin;
   }
 
   async load(initialConfig) {
@@ -179,7 +194,7 @@ class Host extends EventEmitter {
     );
 
     if (isElectron && this.#config.useRealms) {
-      await this.gatekeeper();
+      this.#config.realmsUserLogin = await this.gatekeeper();
     }
 
     if (isElectron) {
@@ -340,7 +355,6 @@ class Host extends EventEmitter {
 
     if (selectedRealm) {
       xLog.dbg(`selected realm: ${selectedRealm}`);
-
       config.variantId = selectedRealm.replace(/\.ork$/, '');
       config.appConfigPath = path.join(
         config.appData,
@@ -561,11 +575,25 @@ class Host extends EventEmitter {
     const policiesJSONFile = path.join(resourcesPath, busConfig.policiesPath);
     const {readJSONSync} = require('fs-extra');
     const policies = readJSONSync(policiesJSONFile, {throws: false});
+    let goblinUser;
     if (policies && policies.defaultSystemUserId) {
-      return `${policies.defaultSystemUserId}@system`;
+      goblinUser = `${policies.defaultSystemUserId}@system`;
     } else {
-      return 'defaultSystemUser@system';
+      goblinUser = 'defaultSystemUser@system';
     }
+
+    if (this.#config.useRealms) {
+      //get the first entry, in multi-realms can be prolematic
+      const userLogin = Object.values(this.#config.realmsUserLogin)[0];
+
+      if (policies && policies.members) {
+        const member = policies.members.find((u) => u.login === userLogin);
+        if (member) {
+          goblinUser = member.id;
+        }
+      }
+    }
+    return goblinUser;
   }
 
   *_init(xBus, next) {
