@@ -38,6 +38,7 @@ const isElectron =
 
 const watt = require('gigawatts');
 const EventEmitter = require('events');
+const {importRealmFile} = require('../lib/helpers.js');
 
 class Host extends EventEmitter {
   #sweeped = false;
@@ -303,11 +304,27 @@ class Host extends EventEmitter {
     xLog.info(`config; ${JSON.stringify(config, null, 2)}`);
   }
 
+  updateRealmsFromResources(config) {
+    const orkFiles = fse
+      .readdirSync(config.resourcesPath)
+      .filter((file) => file.endsWith('.ork'))
+      .map((file) => path.join(config.resourcesPath, file));
+    for (const orkFilePath of orkFiles) {
+      importRealmFile(orkFilePath, config.realmsStorePath);
+      const realmFile = path.basename(orkFilePath);
+      const updated = config.realmFiles.indexOf(realmFile) !== -1;
+      if (!updated) {
+        config.realmFiles.push(realmFile);
+      }
+    }
+  }
+
   async selectRealm(config) {
     let selectedRealm = null;
     let skipEnv = false;
 
     if (isElectron && config.useRealms) {
+      this.updateRealmsFromResources(config);
       await this._app.whenReady();
       this.WM = require('../lib/wm.js');
 
