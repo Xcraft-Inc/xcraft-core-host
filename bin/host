@@ -189,7 +189,7 @@ class Host extends EventEmitter {
     this._xServer = require('xcraft-server')(
       config.appConfigPath,
       config.projectPath,
-      () => require('../lib/args-parsing.js')(),
+      () => require('../lib/args-parsing.js')(false, process.argv, true),
       skipEnv
     );
 
