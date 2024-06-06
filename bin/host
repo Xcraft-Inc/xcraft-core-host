@@ -147,6 +147,7 @@ class Host extends EventEmitter {
         xLog.err('Cannot reach the gatekeeper:', err);
       } finally {
         if (failed) {
+          // FIXME: in this case we must as for the keys (bypassing gatekeeper)
           xLog.err('Gatekeeper process failed, exiting app...');
           const {app} = require('electron');
           app.exit(0);
