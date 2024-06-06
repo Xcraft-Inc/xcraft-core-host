@@ -97,7 +97,7 @@ class Host extends EventEmitter {
 
   async gatekeeper() {
     const {topology} = require('xcraft-core-etc')().load('xcraft-core-horde');
-    let realmsUserLogin = {};
+    let realmsUserInfos = {};
     let disposers = [];
     for (const [server, {gatekeeper}] of Object.entries(topology)) {
       if (!gatekeeper) {
@@ -105,8 +105,8 @@ class Host extends EventEmitter {
       }
       const hasKeys = this.checkRealmKeys(server);
       if (hasKeys) {
-        const {E} = this.getRealmClientCertificateSubject(server);
-        realmsUserLogin[server] = E;
+        const {CN, OU, E} = this.getRealmClientCertificateSubject(server);
+        realmsUserInfos[server] = {login: E, rank: OU, id: CN};
         continue;
       }
 
@@ -134,12 +134,13 @@ class Host extends EventEmitter {
           accepted,
           keys: {certPem, privateKeyPem},
         } = await loginResp.json();
-        realmsUserLogin[server] = login;
         if (!accepted) {
           failed = true;
         }
-        xLog.dbg('Registration accepted!');
+        xLog.dbg('Registration accepted for login', login);
         await this.saveRealmKeys(server, certPem, privateKeyPem);
+        const {CN, OU, E} = this.getRealmClientCertificateSubject(server);
+        realmsUserInfos[server] = {login: E, rank: OU, id: CN};
         xLog.dbg('Realm keys saved');
       } catch (err) {
         failed = true;
@@ -153,7 +154,7 @@ class Host extends EventEmitter {
       }
     }
     this.WM.instance.displaySplash(disposers[disposers.length - 1]);
-    return realmsUserLogin;
+    return realmsUserInfos;
   }
 
   async load(initialConfig) {
@@ -193,7 +194,7 @@ class Host extends EventEmitter {
     );
 
     if (isElectron && this.#config.useRealms) {
-      this.#config.realmsUserLogin = await this.gatekeeper();
+      this.#config.realmsUserInfos = await this.gatekeeper();
     }
 
     if (isElectron) {
@@ -565,16 +566,12 @@ class Host extends EventEmitter {
       goblinUser = 'defaultSystemUser@system';
     }
 
-    if (this.#config.useRealms && this.#config.realmsUserLogin) {
+    if (this.#config.useRealms && this.#config.realmsUserInfos) {
+      const Goblin = require('xcraft-core-goblin');
       //get the first entry, in multi-realms can be prolematic
-      const userLogin = Object.values(this.#config.realmsUserLogin)[0];
-
-      if (policies && policies.members) {
-        const member = policies.members.find((u) => u.login === userLogin);
-        if (member) {
-          goblinUser = member.id;
-        }
-      }
+      const userInfos = Object.values(this.#config.realmsUserInfos)[0];
+      Goblin.registerUser(userInfos);
+      goblinUser = userInfos.id;
     }
     return goblinUser;
   }
