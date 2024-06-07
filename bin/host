@@ -567,7 +567,11 @@ class Host extends EventEmitter {
       goblinUser = 'defaultSystemUser@system';
     }
 
-    if (this.#config.useRealms && this.#config.realmsUserInfos) {
+    if (
+      this.#config.useRealms &&
+      this.#config.realmsUserInfos &&
+      Object.keys(this.#config.realmsUserInfos).length > 0
+    ) {
       const Goblin = require('xcraft-core-goblin');
       //get the first entry, in multi-realms can be prolematic
       const userInfos = Object.values(this.#config.realmsUserInfos)[0];
