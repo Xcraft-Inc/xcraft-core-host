@@ -128,6 +128,7 @@ class Host extends EventEmitter {
     const {topology} = require('xcraft-core-etc')().load('xcraft-core-horde');
     let realmsUserInfos = {};
     let disposers = [];
+
     for (const [server, {gatekeeper}] of Object.entries(topology)) {
       if (!gatekeeper) {
         continue;
@@ -144,10 +145,12 @@ class Host extends EventEmitter {
         xLog.dbg('Registering with gatekeeper...');
         const registerResp = await fetch(`${gatekeeper}/register`);
         const {providerUrl, waitingUrl} = await registerResp.json();
+
+        xLog.dbg('Login with auth provider...');
+
         if (!this.WM) {
           this.WM = require('../lib/wm.js');
         }
-        xLog.dbg('Login with auth provider...');
         const disposer = this.WM.instance.displayAuth(
           providerUrl,
           true,
