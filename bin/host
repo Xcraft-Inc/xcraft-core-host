@@ -77,6 +77,35 @@ class Host extends EventEmitter {
     await fse.writeFile(keyPath, privateKeyPem);
   }
 
+  importKeyAndCertFiles(server, keyFiles) {
+    const {certPath, keyPath} = this.getRealmKeysPath(server);
+
+    if (keyFiles.length !== 2) {
+      return false;
+    }
+
+    const list = [];
+
+    for (const keyFile of keyFiles) {
+      const basename = path.basename(keyFile);
+      if (basename === path.basename(certPath)) {
+        list.push({src: keyFile, dst: certPath});
+      } else if (basename === path.basename(keyPath)) {
+        list.push({src: keyFile, dst: keyPath});
+      }
+    }
+
+    if (list.length !== 2) {
+      return false;
+    }
+
+    for (const {src, dst} of list) {
+      fse.copyFileSync(src, dst);
+    }
+
+    return true;
+  }
+
   getRealmClientCertificateSubject(server) {
     const pki = require('node-forge').pki;
     const {certPath} = this.getRealmKeysPath(server);
@@ -147,10 +176,36 @@ class Host extends EventEmitter {
         xLog.err('Cannot reach the gatekeeper:', err);
       } finally {
         if (failed) {
-          // FIXME: in this case we must as for the keys (bypassing gatekeeper)
-          xLog.err('Gatekeeper process failed, exiting app...');
-          const {app} = require('electron');
-          app.exit(0);
+          xLog.err('Gatekeeper process failed, ask for keys...');
+
+          const {app, dialog} = require('electron');
+          await app.whenReady();
+
+          const filePaths = dialog.showOpenDialogSync({
+            title: 'Select a key and a cert files to import (2 files)',
+            defaultPath: app.getPath('home'),
+            buttonLabel: 'import',
+            filters: [
+              {
+                name: 'PEM key and certificate file (.pem)',
+                extensions: ['pem'],
+              },
+            ],
+            properties: ['openFile', 'multiSelections', 'dontAddToRecent'],
+          });
+          if (!filePaths) {
+            xLog.dbg(`user canceled import`);
+            app.exit(0);
+          }
+
+          const imported = this.importKeyAndCertFiles(server, filePaths);
+          if (!imported) {
+            await dialog.showErrorBox(
+              'Error with key and certificate',
+              'The provided files are not supported, exit...'
+            );
+            app.exit(0);
+          }
         }
       }
     }
