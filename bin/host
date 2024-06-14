@@ -124,6 +124,54 @@ class Host extends EventEmitter {
     return hasKey && hasCert;
   }
 
+  async tryToImportKeys(server) {
+    xLog.err('Gatekeeper process failed, ask for keys...');
+
+    const {app, dialog} = require('electron');
+    await app.whenReady();
+
+    const result = dialog.showMessageBoxSync({
+      title: `Connection to the ${server} realm`,
+      type: 'info',
+      message:
+        'The connection via the gatekeeper has failed.\nYou must provide the keys or quit and contact an administrator.',
+      buttons: ['Continue', 'Quit'],
+    });
+    if (result === 1) {
+      xLog.dbg(`user canceled import`);
+      app.exit(0);
+      return;
+    }
+
+    const filePaths = dialog.showOpenDialogSync({
+      title: 'Select a key and a cert files to import (2 files)',
+      defaultPath: app.getPath('home'),
+      buttonLabel: 'import',
+      filters: [
+        {
+          name: 'PEM key and certificate file (.pem)',
+          extensions: ['pem'],
+        },
+      ],
+      properties: ['openFile', 'multiSelections', 'dontAddToRecent'],
+    });
+    if (!filePaths) {
+      xLog.dbg(`user canceled import`);
+      app.exit(0);
+      return;
+    }
+
+    const imported = this.importKeyAndCertFiles(server, filePaths);
+    if (!imported) {
+      await dialog.showErrorBox(
+        'Error with key and certificate',
+        'The provided files are not supported, exit...'
+      );
+      app.exit(0);
+      return;
+    }
+  }
+
   async gatekeeper() {
     const {topology} = require('xcraft-core-etc')().load('xcraft-core-horde');
     let realmsUserInfos = {};
@@ -179,36 +227,7 @@ class Host extends EventEmitter {
         xLog.err('Cannot reach the gatekeeper:', err);
       } finally {
         if (failed) {
-          xLog.err('Gatekeeper process failed, ask for keys...');
-
-          const {app, dialog} = require('electron');
-          await app.whenReady();
-
-          const filePaths = dialog.showOpenDialogSync({
-            title: 'Select a key and a cert files to import (2 files)',
-            defaultPath: app.getPath('home'),
-            buttonLabel: 'import',
-            filters: [
-              {
-                name: 'PEM key and certificate file (.pem)',
-                extensions: ['pem'],
-              },
-            ],
-            properties: ['openFile', 'multiSelections', 'dontAddToRecent'],
-          });
-          if (!filePaths) {
-            xLog.dbg(`user canceled import`);
-            app.exit(0);
-          }
-
-          const imported = this.importKeyAndCertFiles(server, filePaths);
-          if (!imported) {
-            await dialog.showErrorBox(
-              'Error with key and certificate',
-              'The provided files are not supported, exit...'
-            );
-            app.exit(0);
-          }
+          await this.tryToImportKeys(server);
         }
       }
     }
