@@ -100,7 +100,7 @@ class Host extends EventEmitter {
     }
 
     for (const {src, dst} of list) {
-      fse.copyFileSync(src, dst);
+      fse.copySync(src, dst);
     }
 
     return true;
