@@ -209,19 +209,21 @@ class Host extends EventEmitter {
         );
         disposers.push(disposer);
         const loginResp = await fetch(waitingUrl);
-        const {
-          login,
-          accepted,
-          keys: {certPem, privateKeyPem},
-        } = await loginResp.json();
+        const results = await loginResp.json();
+        const {login, accepted} = results;
         if (!accepted) {
+          xLog.dbg('Registration failed for login ', login, ' (not accepted)');
           failed = true;
+        } else {
+          xLog.dbg('Registration accepted for login ', login);
+          const {
+            keys: {certPem, privateKeyPem},
+          } = results;
+          await this.saveRealmKeys(server, certPem, privateKeyPem);
+          const {CN, OU, E} = this.getRealmClientCertificateSubject(server);
+          realmsUserInfos[server] = {login: E, rank: OU, id: CN};
+          xLog.dbg('Realm keys saved');
         }
-        xLog.dbg('Registration accepted for login', login);
-        await this.saveRealmKeys(server, certPem, privateKeyPem);
-        const {CN, OU, E} = this.getRealmClientCertificateSubject(server);
-        realmsUserInfos[server] = {login: E, rank: OU, id: CN};
-        xLog.dbg('Realm keys saved');
       } catch (err) {
         failed = true;
         xLog.err('Cannot reach the gatekeeper:', err);
