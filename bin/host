@@ -923,11 +923,20 @@ if (appArg.length > 0) {
 const run = async () => {
   if (isElectron) {
     xLog.info(`electron runtime detected,`);
-    const {protocol} = electron;
+    const {protocol, app} = electron;
 
     protocol.registerSchemesAsPrivileged([
       {scheme: 'app', privileges: {standard: true}},
     ]);
+
+    /* Enable app indicator support with Linux and AppImage */
+    if (process.platform === 'linux' && process.env.APPIMAGE) {
+      const {md5} = require('xcraft-core-utils/lib/crypto.js');
+      const id = md5(`file://${path.resolve(process.env.APPIMAGE).trim()}`);
+      const dekstopName = `appimagekit_${id}.desktop`;
+      process.env['CHROME_DESKTOP'] = dekstopName;
+      app?.setDesktopName(dekstopName);
+    }
   }
 
   const initialConfig = await initialConfigLoader(appArg, isElectron);
