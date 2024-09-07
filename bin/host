@@ -669,7 +669,7 @@ class Host extends EventEmitter {
     let connected = false;
 
     const {initializeNetworkStackForProxy} = require('../lib/proxy.js');
-    yield initializeNetworkStackForProxy(xLog, next);
+    yield initializeNetworkStackForProxy();
 
     const _next = next.parallel();
     const unsub = this._busClient.events.subscribe(`greathall::loaded`, () => {
