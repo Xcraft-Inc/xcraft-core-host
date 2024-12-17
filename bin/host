@@ -27,7 +27,7 @@ const configBuilder = require('../lib/configBuilder.js');
 
 let electron;
 try {
-  electron = require('electron');
+  electron = require('xcraft-core-host/lib/neutron.js');
 } catch (ex) {
   if (ex.code !== 'MODULE_NOT_FOUND') {
     throw ex;
@@ -52,7 +52,7 @@ class Host extends EventEmitter {
     super();
 
     if (isElectron) {
-      const {app} = require('electron');
+      const {app} = require('xcraft-core-host/lib/neutron.js');
       this._app = app;
     }
 
@@ -127,7 +127,7 @@ class Host extends EventEmitter {
   async tryToImportKeys(server) {
     xLog.err('Gatekeeper process failed, ask for keys...');
 
-    const {app, dialog} = require('electron');
+    const {app, dialog} = require('xcraft-core-host/lib/neutron.js');
     await app.whenReady();
 
     const result = dialog.showMessageBoxSync({
@@ -279,7 +279,7 @@ class Host extends EventEmitter {
 
     if (isElectron) {
       if (!config.useRealms) {
-        const {app} = require('electron');
+        const {app} = require('xcraft-core-host/lib/neutron.js');
         await app.whenReady();
       }
       if (!this.WM) {
@@ -526,7 +526,7 @@ class Host extends EventEmitter {
     }
 
     if (isElectron) {
-      const {powerSaveBlocker} = require('electron');
+      const {powerSaveBlocker} = require('xcraft-core-host/lib/neutron.js');
       for (const powerSaveId of this._powerSaveBlockerIds) {
         powerSaveBlocker.stop(powerSaveId);
       }
@@ -780,7 +780,7 @@ class Host extends EventEmitter {
       const appArgs = require('../lib/args-parsing.js')();
 
       if (isElectron && appArgs['relaunch-reason']) {
-        const {app} = require('electron');
+        const {app} = require('xcraft-core-host/lib/neutron.js');
         let message = `${app.getName()} is restarting, please wait...`;
         if (appArgs) {
           switch (appArgs['relaunch-reason']) {
