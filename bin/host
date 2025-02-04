@@ -576,15 +576,19 @@ class Host extends EventEmitter {
       return;
     }
 
-    const result = yield this._busClient.command.send(
-      this._xConfig.protocols[protocol],
-      {protocol, host, pathname, href},
-      null,
-      next
-    );
-    if (result?.data) {
-      const stream = fse.createReadStream(result.data);
-      return new Response(stream);
+    try {
+      const result = yield this._busClient.command.send(
+        this._xConfig.protocols[protocol],
+        {protocol, host, pathname, href},
+        null,
+        next
+      );
+      if (result?.data) {
+        const stream = fse.createReadStream(result.data);
+        return new Response(stream);
+      }
+    } catch (ex) {
+      xLog.err(ex.stack || ex.message || ex);
     }
   }
 
