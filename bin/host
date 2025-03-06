@@ -1,4 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-require('../lib/host.js');
+const run = require('../lib/host.js');
+run().catch((err) => {
+  xLog.err(err.stack || err.message || err);
+});
