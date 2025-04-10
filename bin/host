@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+const moduleName = 'xcraft-core-host';
+const xLog = require('xcraft-core-log')(moduleName);
+
 const run = require('../lib/host.js');
 run().catch((err) => {
   xLog.err(err.stack || err.message || err);
