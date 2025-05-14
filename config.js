@@ -79,6 +79,12 @@ module.exports = [
   },
   {
     type: 'input',
+    name: 'defaultProtocol',
+    message: 'default protocol client',
+    default: null,
+  },
+  {
+    type: 'input',
     name: 'protocols',
     message: 'map of protocols',
     default: {},
