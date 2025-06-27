@@ -20,7 +20,7 @@
     "xcraft-core-busclient": "^5.0.0",
     "xcraft-core-etc": "^3.0.0",
     "xcraft-core-horde": "^3.0.0",
-    "xcraft-core-log": "^2.0.0",
+    "xcraft-core-log": "^2.2.0",
     "xcraft-core-transport": "^4.0.0",
     "xcraft-core-utils": "^4.0.0",
     "xcraft-global-agent": "^3.1.2",
