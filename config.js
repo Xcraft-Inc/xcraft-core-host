@@ -54,6 +54,12 @@ module.exports = [
   },
   {
     type: 'input',
+    name: 'activateQuest',
+    message: 'quest called when the Electron application is activated (macOS)',
+    default: null,
+  },
+  {
+    type: 'input',
     name: 'appOptions',
     message: 'add custom command line options (yargs format)',
     default: null,
