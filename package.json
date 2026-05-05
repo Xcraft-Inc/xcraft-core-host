@@ -1,6 +1,6 @@
 {
   "name": "xcraft-core-host",
-  "version": "3.25.0",
+  "version": "3.25.1",
   "description": "Multiple engines support for xcraft-server",
   "main": "lib/index.js",
   "bin": {
